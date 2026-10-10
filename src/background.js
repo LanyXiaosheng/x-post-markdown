@@ -25,7 +25,8 @@ importScripts("markdown.js");
     var markdown = XMarkdown.formatPost(post);
     var username = post.authorUsername ? "@" + post.authorUsername : "x-post";
     var statusId = (post.url.match(/(?:status|article)\/(\d+)/) || [])[1] || Date.now();
-    var filename = XMarkdown.safeFilename(username + "-" + statusId) + ".md";
+    var filenameBase = post.title || username + "-" + statusId;
+    var filename = XMarkdown.safeFilename(filenameBase) + ".md";
     var url = "data:text/markdown;charset=utf-8," + encodeURIComponent(markdown);
     chrome.downloads.download({
       url: url,

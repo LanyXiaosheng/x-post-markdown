@@ -59,3 +59,10 @@ assert.equal(chrome.downloadOptions.filename, "@ada-12345.md");
 assert.equal(chrome.downloadOptions.saveAs, false);
 assert.equal(chrome.downloadOptions.conflictAction, "uniquify");
 assert.match(decodeURIComponent(chrome.downloadOptions.url), /可导出的帖子/);
+
+post.title = "从 0 到 1：个人视觉 IP";
+chrome.runtime.onMessage.listener({ type: "XMD_EXPORT", post }, {}, (value) => {
+  response = value;
+});
+assert.equal(response.ok, true);
+assert.equal(chrome.downloadOptions.filename, "从 0 到 1：个人视觉 IP.md");
