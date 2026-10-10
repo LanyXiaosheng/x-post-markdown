@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "X 帖子快捷导出 Markdown",
+  "version": "0.1.0",
+  "description": "一键把当前 X 帖子导出为本地 Markdown 文件。",
+  "permissions": ["activeTab", "contextMenus", "downloads"],
+  "host_permissions": ["https://x.com/*", "https://www.x.com/*", "https://twitter.com/*", "https://mobile.twitter.com/*"],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "action": {
+    "default_title": "导出当前 X 帖子",
+    "default_popup": "src/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://x.com/*",
+        "https://www.x.com/*",
+        "https://twitter.com/*",
+        "https://mobile.twitter.com/*"
+      ],
+      "js": ["src/markdown.js", "src/content.js"],
+      "css": ["src/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "export-current-post": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+M",
+        "mac": "MacCtrl+Shift+M"
+      },
+      "description": "导出当前 X 帖子为 Markdown"
+    }
+  }
+}
