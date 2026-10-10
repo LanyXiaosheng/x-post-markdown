@@ -35,6 +35,20 @@ const richMarkdown = context.globalThis.XMarkdown.richBlocksToMarkdown([
 
 assert.equal(richMarkdown, "## 配图规则\n\n**重点内容**\n\n- 列表项");
 
+const orderedImage = element("img", "", [], {
+  src: "https://pbs.twimg.com/in-order.jpg",
+  alt: "正文插图"
+});
+const orderedMarkdown = context.globalThis.XMarkdown.richContentToMarkdown([
+  { kind: "block", node: element("div", "longform-unstyled", [text("图片前")]) },
+  { kind: "image", node: orderedImage },
+  { kind: "block", node: element("div", "longform-unstyled", [text("图片后")]) }
+]);
+assert.equal(
+  orderedMarkdown,
+  "图片前\n\n![正文插图](https://pbs.twimg.com/in-order.jpg)\n\n图片后"
+);
+
 const headerCell = element("th", "", [text("项目")]);
 const valueCell = element("td", "", [text("说明")]);
 headerCell.querySelectorAll = () => [];

@@ -69,7 +69,34 @@
       seenOffsets[offset] = true;
       blocks.push(block);
     });
-    if (blocks.length) return XMarkdown.richBlocksToMarkdown(blocks);
+    if (blocks.length) {
+      var items = [];
+      article.querySelectorAll('[class*="longform-"], table, img[src], video').forEach(function (node) {
+        var blockIndex = blocks.indexOf(node);
+        if (blockIndex >= 0) {
+          items.push({ kind: "block", node: node });
+          return;
+        }
+        var insideBlock = blocks.some(function (block) {
+          return block.contains(node);
+        });
+        if (insideBlock) return;
+        if (node.tagName === "IMG") {
+          var isAvatar = node.closest(
+            '[data-testid="UserAvatar-Container"], [data-testid="Tweet-User-Avatar"], [data-testid="User-Name"]'
+          );
+          if (isAvatar || /avatar|头像/i.test(node.alt || "")) return;
+          items.push({ kind: "image", node: node });
+          return;
+        }
+        if (node.tagName === "VIDEO") {
+          items.push({ kind: "video", node: node });
+          return;
+        }
+        if (node.tagName === "TABLE") items.push({ kind: "table", node: node });
+      });
+      return XMarkdown.richContentToMarkdown(items);
+    }
 
     var body = article.querySelector(
       '[data-testid="twitter-article-body"], [data-testid="twitter-article-content"], [data-testid="article-content"]'
@@ -94,7 +121,7 @@
       authorUsername: author.authorUsername,
       publishedAt: time ? time.getAttribute("datetime") || XMarkdown.cleanText(time.innerText) : "",
       url: getPostUrl(article, Boolean(title)),
-      media: getMedia(article, body)
+      media: title && richBody ? [] : getMedia(article, body)
     };
     if (quoteArticle && quoteArticle !== article) {
       post.quote = {

@@ -35,6 +35,11 @@
 
     var tag = (node.tagName || "").toLowerCase();
     if (tag === "br") return "\n";
+    if (tag === "table") return tableToMarkdown(node);
+    if (tag === "video") {
+      var videoUrl = getAttribute(node, "poster") || getAttribute(node, "src") || node.poster || node.src || "";
+      return videoUrl ? "[视频](" + videoUrl + ")" : "";
+    }
     if (tag === "img") {
       var imageUrl = getAttribute(node, "src");
       return imageUrl ? "![" + (getAttribute(node, "alt") || "图片") + "](" + imageUrl + ")" : "";
@@ -136,21 +141,37 @@
     return match ? match[1].toLowerCase() : "unstyled";
   }
 
+  function richBlockToMarkdown(block) {
+    var text = cleanText(renderInlineChildren(block));
+    if (!text) return "";
+    var type = blockType(block);
+    var depth = Number(getAttribute(block, "data-depth")) || 0;
+    var indent = "  ".repeat(depth);
+    if (type.indexOf("header-one") >= 0) return "# " + text;
+    if (type.indexOf("header-two") >= 0) return "## " + text;
+    if (type.indexOf("header-three") >= 0) return "### " + text;
+    if (type.indexOf("blockquote") >= 0) return "> " + text.replace(/\n/g, "\n> ");
+    if (type.indexOf("unordered-list-item") >= 0) return indent + "- " + text;
+    if (type.indexOf("ordered-list-item") >= 0) return indent + "1. " + text;
+    if (type.indexOf("code-block") >= 0) return FENCE + "\n" + text + "\n" + FENCE;
+    return text;
+  }
+
   function richBlocksToMarkdown(blocks) {
-    return blocks.map(function (block) {
-      var text = cleanText(renderInlineChildren(block));
-      if (!text) return "";
-      var type = blockType(block);
-      var depth = Number(getAttribute(block, "data-depth")) || 0;
-      var indent = "  ".repeat(depth);
-      if (type.indexOf("header-one") >= 0) return "# " + text;
-      if (type.indexOf("header-two") >= 0) return "## " + text;
-      if (type.indexOf("header-three") >= 0) return "### " + text;
-      if (type.indexOf("blockquote") >= 0) return "> " + text.replace(/\n/g, "\n> ");
-      if (type.indexOf("unordered-list-item") >= 0) return indent + "- " + text;
-      if (type.indexOf("ordered-list-item") >= 0) return indent + "1. " + text;
-      if (type.indexOf("code-block") >= 0) return FENCE + "\n" + text + "\n" + FENCE;
-      return text;
+    return blocks.map(richBlockToMarkdown).filter(Boolean).join("\n\n");
+  }
+
+  function richContentToMarkdown(items) {
+    return items.map(function (item) {
+      if (item.kind === "block") return richBlockToMarkdown(item.node);
+      if (item.kind === "table") return tableToMarkdown(item.node);
+      if (item.kind === "image") return renderInline(item.node);
+      if (item.kind === "video") {
+        var videoUrl = getAttribute(item.node, "poster") ||
+          getAttribute(item.node, "src") || item.node.poster || item.node.src || "";
+        return videoUrl ? "[视频](" + videoUrl + ")" : "";
+      }
+      return "";
     }).filter(Boolean).join("\n\n");
   }
 
@@ -192,6 +213,7 @@
     cleanText: cleanText,
     formatPost: formatPost,
     htmlToMarkdown: htmlToMarkdown,
+    richContentToMarkdown: richContentToMarkdown,
     richBlocksToMarkdown: richBlocksToMarkdown,
     safeFilename: safeFilename
   };
