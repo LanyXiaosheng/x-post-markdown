@@ -30,6 +30,7 @@ X 页面 DOM
 - Markdown Formatter：输出 YAML Front Matter，并把 X Article 的富文本块、表格、媒体链接和引用帖子转换成 Markdown。
 - Service Worker：处理跨上下文消息、右键菜单、快捷键和下载。
 - Popup：给用户提供明确的一键导出入口。
+- Batch Selection：打开 Popup 后向 Content Script 请求当前已加载帖子，默认全选，按用户勾选结果调用后台逐个下载。
 
 ## 设计决策
 

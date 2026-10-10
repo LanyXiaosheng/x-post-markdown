@@ -21,7 +21,7 @@ importScripts("markdown.js");
     });
   }
 
-  function downloadPost(post, sendResponse) {
+  function downloadPost(post, callback) {
     var markdown = XMarkdown.formatPost(post);
     var username = post.authorUsername ? "@" + post.authorUsername : "x-post";
     var statusId = (post.url.match(/(?:status|article)\/(\d+)/) || [])[1] || Date.now();
@@ -35,10 +35,33 @@ importScripts("markdown.js");
       conflictAction: "uniquify"
     }, function (downloadId) {
       if (chrome.runtime.lastError) {
-        sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+        callback({ ok: false, error: chrome.runtime.lastError.message });
         return;
       }
-      sendResponse({ ok: Boolean(downloadId) });
+      callback({ ok: Boolean(downloadId) });
+    });
+  }
+
+  function downloadBatch(posts, sendResponse) {
+    var total = posts.length;
+    var completed = 0;
+    var succeeded = 0;
+    if (!total) {
+      sendResponse({ ok: false, count: 0, failed: 0 });
+      return;
+    }
+    posts.forEach(function (post) {
+      downloadPost(post, function (result) {
+        completed += 1;
+        if (result.ok) succeeded += 1;
+        if (completed === total) {
+          sendResponse({
+            ok: succeeded === total,
+            count: succeeded,
+            failed: total - succeeded
+          });
+        }
+      });
     });
   }
 
@@ -61,6 +84,10 @@ importScripts("markdown.js");
     if (!message) return false;
     if (message.type === "XMD_EXPORT" && message.post) {
       downloadPost(message.post, sendResponse);
+      return true;
+    }
+    if (message.type === "XMD_EXPORT_BATCH" && Array.isArray(message.posts)) {
+      downloadBatch(message.posts, sendResponse);
       return true;
     }
     return false;

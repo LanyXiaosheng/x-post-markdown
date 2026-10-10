@@ -23,6 +23,7 @@ const chrome = {
   downloads: {
     download: (options, callback) => {
       chrome.downloadOptions = options;
+      chrome.downloadCount = (chrome.downloadCount || 0) + 1;
       callback(99);
     }
   },
@@ -66,3 +67,15 @@ chrome.runtime.onMessage.listener({ type: "XMD_EXPORT", post }, {}, (value) => {
 });
 assert.equal(response.ok, true);
 assert.equal(chrome.downloadOptions.filename, "从 0 到 1：个人视觉 IP.md");
+
+chrome.downloadCount = 0;
+const secondPost = { ...post, title: "第二篇长文", url: "https://x.com/ada/article/67890" };
+chrome.runtime.onMessage.listener(
+  { type: "XMD_EXPORT_BATCH", posts: [post, secondPost] },
+  {},
+  (value) => { response = value; }
+);
+assert.equal(response.ok, true);
+assert.equal(response.count, 2);
+assert.equal(response.failed, 0);
+assert.equal(chrome.downloadCount, 2);

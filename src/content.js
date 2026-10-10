@@ -219,7 +219,24 @@
     document.querySelectorAll('article[data-testid="tweet"]').forEach(addButton);
   }
 
+  function collectVisiblePosts() {
+    var seen = {};
+    var posts = [];
+    document.querySelectorAll('article[data-testid="tweet"]').forEach(function (article) {
+      var post = extractPost(article);
+      var key = post && post.url ? post.url : "";
+      if (!post || seen[key] || (!post.text && !post.title && !post.url)) return;
+      seen[key] = true;
+      posts.push(post);
+    });
+    return posts;
+  }
+
   chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+    if (message && message.type === "XMD_LIST_POSTS") {
+      sendResponse({ ok: true, posts: collectVisiblePosts() });
+      return true;
+    }
     if (message && message.type === "XMD_EXPORT_CURRENT") {
       requestExport();
       sendResponse({ ok: true });

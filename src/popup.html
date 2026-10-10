@@ -12,12 +12,24 @@
         <span class="brand-mark">𝕏</span>
         <div>
           <h1>帖子导出</h1>
-          <p>保存为本地 Markdown</p>
+          <p>批量保存为本地 Markdown</p>
         </div>
       </div>
-      <button id="export" class="primary">导出当前帖子</button>
-      <p id="status" class="status">请先打开 X 帖子页面。</p>
-      <p class="hint">也可以在帖子上悬停，直接点击“导出 MD”。</p>
+
+      <section class="scan-panel" aria-labelledby="scan-title">
+        <div class="scan-head">
+          <strong id="scan-title">正在识别当前页面…</strong>
+          <label class="select-all">
+            <input id="select-all" type="checkbox" checked>
+            <span>全选</span>
+          </label>
+        </div>
+        <div id="post-list" class="post-list" aria-live="polite"></div>
+      </section>
+
+      <button id="export" class="primary" type="button" disabled>导出选中帖子</button>
+      <p id="status" class="status">正在扫描当前页面已加载的帖子…</p>
+      <p class="hint">默认全选；只会识别当前页面已经加载出来的帖子。</p>
     </main>
     <script src="popup.js"></script>
   </body>
