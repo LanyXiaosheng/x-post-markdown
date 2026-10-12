@@ -39,6 +39,7 @@
         '[data-testid="UserAvatar-Container"], [data-testid="Tweet-User-Avatar"], [data-testid="User-Name"]'
       );
       if (!src || seen[src] || isAvatar || /avatar|头像/i.test(image.alt || "")) return;
+      if (XMarkdown.isEmojiText(image.alt)) return;
       if (body && body.indexOf(src) >= 0) return;
       seen[src] = true;
       items.push({ type: "image", url: src, alt: image.alt || "X 帖子图片" });
@@ -86,6 +87,7 @@
             '[data-testid="UserAvatar-Container"], [data-testid="Tweet-User-Avatar"], [data-testid="User-Name"]'
           );
           if (isAvatar || /avatar|头像/i.test(node.alt || "")) return;
+          if (XMarkdown.isEmojiText(node.alt)) return;
           items.push({ kind: "image", node: node });
           return;
         }

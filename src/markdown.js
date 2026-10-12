@@ -28,6 +28,13 @@
     return node && node.getAttribute ? node.getAttribute(name) || "" : "";
   }
 
+  function isEmojiText(value) {
+    var text = String(value || "").trim();
+    return Boolean(text) &&
+      text.length <= 16 &&
+      /^[\p{Extended_Pictographic}\p{Emoji_Component}\u200d\ufe0f\s]+$/u.test(text);
+  }
+
   function renderInline(node) {
     if (!node) return "";
     if (node.nodeType === 3) return node.nodeValue.replace(/\s+/g, " ");
@@ -42,7 +49,9 @@
     }
     if (tag === "img") {
       var imageUrl = getAttribute(node, "src");
-      return imageUrl ? "![" + (getAttribute(node, "alt") || "图片") + "](" + imageUrl + ")" : "";
+      var imageAlt = getAttribute(node, "alt") || "图片";
+      if (isEmojiText(imageAlt)) return imageAlt;
+      return imageUrl ? "![" + imageAlt + "](" + imageUrl + ")" : "";
     }
 
     var content = Array.prototype.map.call(node.childNodes || [], renderInline).join("");
@@ -213,6 +222,7 @@
     cleanText: cleanText,
     formatPost: formatPost,
     htmlToMarkdown: htmlToMarkdown,
+    isEmojiText: isEmojiText,
     richContentToMarkdown: richContentToMarkdown,
     richBlocksToMarkdown: richBlocksToMarkdown,
     safeFilename: safeFilename

@@ -49,6 +49,10 @@ assert.equal(
   "图片前\n\n![正文插图](https://pbs.twimg.com/in-order.jpg)\n\n图片后"
 );
 
+const emojiImage = element("img", "", [], { src: "emoji.png", alt: "😭" });
+assert.equal(context.globalThis.XMarkdown.isEmojiText("😭"), true);
+assert.equal(context.globalThis.XMarkdown.htmlToMarkdown({ childNodes: [emojiImage] }), "😭");
+
 const headerCell = element("th", "", [text("项目")]);
 const valueCell = element("td", "", [text("说明")]);
 headerCell.querySelectorAll = () => [];

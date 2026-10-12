@@ -31,6 +31,7 @@ X 页面 DOM
 - Service Worker：处理跨上下文消息、右键菜单、快捷键和下载。
 - Popup：给用户提供明确的一键导出入口。
 - Batch Selection：打开 Popup 后向 Content Script 请求当前已加载帖子，默认全选，按用户勾选结果调用后台逐个下载。
+- Batch Download：后台采用串行队列并捕获单条异常，确保一个坏帖子不会让整个消息通道无响应。
 
 ## 设计决策
 

@@ -22,47 +22,56 @@ importScripts("markdown.js");
   }
 
   function downloadPost(post, callback) {
-    var markdown = XMarkdown.formatPost(post);
-    var username = post.authorUsername ? "@" + post.authorUsername : "x-post";
-    var statusId = (post.url.match(/(?:status|article)\/(\d+)/) || [])[1] || Date.now();
-    var filenameBase = post.title || username + "-" + statusId;
-    var filename = XMarkdown.safeFilename(filenameBase) + ".md";
-    var url = "data:text/markdown;charset=utf-8," + encodeURIComponent(markdown);
-    chrome.downloads.download({
-      url: url,
-      filename: filename,
-      saveAs: false,
-      conflictAction: "uniquify"
-    }, function (downloadId) {
-      if (chrome.runtime.lastError) {
-        callback({ ok: false, error: chrome.runtime.lastError.message });
-        return;
-      }
-      callback({ ok: Boolean(downloadId) });
-    });
+    try {
+      var markdown = XMarkdown.formatPost(post || {});
+      var username = post && post.authorUsername ? "@" + post.authorUsername : "x-post";
+      var postUrl = post && typeof post.url === "string" ? post.url : "";
+      var statusId = (postUrl.match(/(?:status|article)\/(\d+)/) || [])[1] || Date.now();
+      var filenameBase = post && post.title ? post.title : username + "-" + statusId;
+      var filename = XMarkdown.safeFilename(filenameBase) + ".md";
+      var url = "data:text/markdown;charset=utf-8," + encodeURIComponent(markdown);
+      chrome.downloads.download({
+        url: url,
+        filename: filename,
+        saveAs: false,
+        conflictAction: "uniquify"
+      }, function (downloadId) {
+        if (chrome.runtime.lastError) {
+          callback({ ok: false, error: chrome.runtime.lastError.message });
+          return;
+        }
+        callback({ ok: Boolean(downloadId) });
+      });
+    } catch (error) {
+      callback({ ok: false, error: error.message || String(error) });
+    }
   }
 
   function downloadBatch(posts, sendResponse) {
     var total = posts.length;
-    var completed = 0;
     var succeeded = 0;
+    var failed = 0;
+    var index = 0;
     if (!total) {
       sendResponse({ ok: false, count: 0, failed: 0 });
       return;
     }
-    posts.forEach(function (post) {
+
+    function next() {
+      if (index >= total) {
+        sendResponse({ ok: failed === 0, count: succeeded, failed: failed });
+        return;
+      }
+      var post = posts[index];
+      index += 1;
       downloadPost(post, function (result) {
-        completed += 1;
         if (result.ok) succeeded += 1;
-        if (completed === total) {
-          sendResponse({
-            ok: succeeded === total,
-            count: succeeded,
-            failed: total - succeeded
-          });
-        }
+        else failed += 1;
+        next();
       });
-    });
+    }
+
+    next();
   }
 
   chrome.runtime.onInstalled.addListener(createMenu);

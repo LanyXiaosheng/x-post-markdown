@@ -79,3 +79,14 @@ assert.equal(response.ok, true);
 assert.equal(response.count, 2);
 assert.equal(response.failed, 0);
 assert.equal(chrome.downloadCount, 2);
+
+const malformedPost = { authorName: "No URL", text: "仍然可导出", media: [] };
+chrome.downloadCount = 0;
+chrome.runtime.onMessage.listener(
+  { type: "XMD_EXPORT_BATCH", posts: [malformedPost, post] },
+  {},
+  (value) => { response = value; }
+);
+assert.equal(response.ok, true);
+assert.equal(response.count, 2);
+assert.equal(chrome.downloadCount, 2);
