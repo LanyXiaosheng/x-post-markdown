@@ -214,12 +214,47 @@
       if (post.quote.url) lines.push(">", "> [查看原帖](" + post.quote.url + ")");
     }
 
+    if (post.comments && post.comments.length) {
+      lines.push("", "## 评论");
+      post.comments.forEach(function (comment) {
+        var commenter = comment.authorName || comment.authorUsername || "匿名用户";
+        var commentBody = cleanText(comment.body || comment.text);
+        lines.push("", "### " + commenter);
+        if (comment.publishedAt) lines.push("", "> " + comment.publishedAt);
+        lines.push("", commentBody || "（评论没有可提取的正文）");
+        if (comment.url) lines.push("", "[查看评论](" + comment.url + ")");
+      });
+    }
+
+    lines.push("", "---", "", "导出时间：" + new Date().toISOString());
+    return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
+  }
+
+  function formatComments(comments) {
+    var lines = [
+      "---",
+      'type: "comments"',
+      'count: "' + comments.length + '"',
+      'source: "X"',
+      "---",
+      "",
+      "# 评论汇总"
+    ];
+    comments.forEach(function (comment) {
+      var commenter = comment.authorName || comment.authorUsername || "匿名用户";
+      var commentBody = cleanText(comment.body || comment.text);
+      lines.push("", "## " + commenter);
+      if (comment.publishedAt) lines.push("", "> " + comment.publishedAt);
+      lines.push("", commentBody || "（评论没有可提取的正文）");
+      if (comment.url) lines.push("", "[查看评论](" + comment.url + ")");
+    });
     lines.push("", "---", "", "导出时间：" + new Date().toISOString());
     return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
   }
 
   global.XMarkdown = {
     cleanText: cleanText,
+    formatComments: formatComments,
     formatPost: formatPost,
     htmlToMarkdown: htmlToMarkdown,
     isEmojiText: isEmojiText,

@@ -80,6 +80,37 @@ assert.equal(response.count, 2);
 assert.equal(response.failed, 0);
 assert.equal(chrome.downloadCount, 2);
 
+const comment = {
+  kind: "comment",
+  parentUrl: post.url,
+  authorName: "评论用户",
+  authorUsername: "commenter",
+  text: "评论内容",
+  url: "https://x.com/commenter/status/999",
+  media: []
+};
+chrome.downloadCount = 0;
+chrome.runtime.onMessage.listener(
+  { type: "XMD_EXPORT_BATCH", posts: [post, comment] },
+  {},
+  (value) => { response = value; }
+);
+assert.equal(response.ok, true);
+assert.equal(response.count, 1);
+assert.equal(chrome.downloadOptions.filename, "从 0 到 1：个人视觉 IP.md");
+assert.match(decodeURIComponent(chrome.downloadOptions.url), /评论内容/);
+
+chrome.downloadCount = 0;
+chrome.runtime.onMessage.listener(
+  { type: "XMD_EXPORT_BATCH", posts: [comment, { ...comment, url: "https://x.com/commenter/status/1000" }] },
+  {},
+  (value) => { response = value; }
+);
+assert.equal(response.ok, true);
+assert.equal(response.count, 1);
+assert.equal(chrome.downloadOptions.filename, "评论汇总.md");
+assert.match(decodeURIComponent(chrome.downloadOptions.url), /评论内容/);
+
 const malformedPost = { authorName: "No URL", text: "仍然可导出", media: [] };
 chrome.downloadCount = 0;
 chrome.runtime.onMessage.listener(

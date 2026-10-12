@@ -21,13 +21,8 @@ importScripts("markdown.js");
     });
   }
 
-  function downloadPost(post, callback) {
+  function downloadMarkdown(markdown, filenameBase, callback) {
     try {
-      var markdown = XMarkdown.formatPost(post || {});
-      var username = post && post.authorUsername ? "@" + post.authorUsername : "x-post";
-      var postUrl = post && typeof post.url === "string" ? post.url : "";
-      var statusId = (postUrl.match(/(?:status|article)\/(\d+)/) || [])[1] || Date.now();
-      var filenameBase = post && post.title ? post.title : username + "-" + statusId;
       var filename = XMarkdown.safeFilename(filenameBase) + ".md";
       var url = "data:text/markdown;charset=utf-8," + encodeURIComponent(markdown);
       chrome.downloads.download({
@@ -47,31 +42,82 @@ importScripts("markdown.js");
     }
   }
 
-  function downloadBatch(posts, sendResponse) {
-    var total = posts.length;
+  function downloadPost(post, comments, callback) {
+    if (typeof comments === "function") {
+      callback = comments;
+      comments = [];
+    }
+    try {
+      var data = Object.assign({}, post || {});
+      data.comments = comments || [];
+      var markdown = XMarkdown.formatPost(data);
+      var username = data.authorUsername ? "@" + data.authorUsername : "x-post";
+      var postUrl = typeof data.url === "string" ? data.url : "";
+      var statusId = (postUrl.match(/(?:status|article)\/(\d+)/) || [])[1] || Date.now();
+      var filenameBase = data.title || username + "-" + statusId;
+      downloadMarkdown(markdown, filenameBase, callback);
+    } catch (error) {
+      callback({ ok: false, error: error.message || String(error) });
+    }
+  }
+
+  function downloadComments(comments, callback) {
+    downloadMarkdown(XMarkdown.formatComments(comments), "评论汇总", callback);
+  }
+
+  function groupComments(posts, comments) {
+    var groups = posts.map(function (post) {
+      return { post: post, comments: [] };
+    });
+    comments.forEach(function (comment) {
+      var target = groups.find(function (group) {
+        return comment.parentUrl && group.post.url === comment.parentUrl;
+      });
+      (target || groups[0]).comments.push(comment);
+    });
+    return groups;
+  }
+
+  function downloadJobs(jobs, sendResponse) {
+    var index = 0;
     var succeeded = 0;
     var failed = 0;
-    var index = 0;
-    if (!total) {
-      sendResponse({ ok: false, count: 0, failed: 0 });
-      return;
-    }
 
     function next() {
-      if (index >= total) {
+      if (index >= jobs.length) {
         sendResponse({ ok: failed === 0, count: succeeded, failed: failed });
         return;
       }
-      var post = posts[index];
+      var job = jobs[index];
       index += 1;
-      downloadPost(post, function (result) {
+      var done = function (result) {
         if (result.ok) succeeded += 1;
         else failed += 1;
         next();
-      });
+      };
+      if (job.type === "comments") downloadComments(job.comments, done);
+      else downloadPost(job.post, job.comments, done);
     }
 
+    if (!jobs.length) {
+      sendResponse({ ok: false, count: 0, failed: 0 });
+      return;
+    }
     next();
+  }
+
+  function downloadBatch(posts, sendResponse) {
+    var selectedPosts = posts.filter(function (post) {
+      return post.kind !== "comment";
+    });
+    var selectedComments = posts.filter(function (post) {
+      return post.kind === "comment";
+    });
+    if (!selectedPosts.length && selectedComments.length) {
+      downloadJobs([{ type: "comments", comments: selectedComments }], sendResponse);
+      return;
+    }
+    downloadJobs(groupComments(selectedPosts, selectedComments), sendResponse);
   }
 
   chrome.runtime.onInstalled.addListener(createMenu);

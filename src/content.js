@@ -221,13 +221,32 @@
     document.querySelectorAll('article[data-testid="tweet"]').forEach(addButton);
   }
 
+  function isDetailPage() {
+    return /\/(?:status|article)\/\d+/.test(window.location.pathname);
+  }
+
+  function isCommentArticle(article, index, detailPage) {
+    var articleText = article.innerText || "";
+    var explicitReply = /(?:^|\n)\s*(?:Replying to|回复给|回复\s*@)/i.test(articleText);
+    return explicitReply || (detailPage && index > 0);
+  }
+
   function collectVisiblePosts() {
     var seen = {};
     var posts = [];
+    var parentUrl = "";
+    var detailPage = isDetailPage();
     document.querySelectorAll('article[data-testid="tweet"]').forEach(function (article) {
+      if (article.parentElement && article.parentElement.closest('article[data-testid="tweet"]')) return;
       var post = extractPost(article);
       var key = post && post.url ? post.url : "";
       if (!post || seen[key] || (!post.text && !post.title && !post.url)) return;
+      post.kind = isCommentArticle(article, posts.length, detailPage) ? "comment" : "post";
+      if (post.kind === "post") {
+        parentUrl = post.url;
+      } else {
+        post.parentUrl = parentUrl;
+      }
       seen[key] = true;
       posts.push(post);
     });

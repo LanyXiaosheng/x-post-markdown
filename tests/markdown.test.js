@@ -74,6 +74,12 @@ const markdown = formatPost({
   publishedAt: "2026-10-10T08:00:00.000Z",
   url: "https://x.com/ada/status/12345",
   text: "第一行\n第二行",
+  comments: [{
+    authorName: "评论用户",
+    authorUsername: "commenter",
+    text: "这是一条评论",
+    url: "https://x.com/commenter/status/999"
+  }],
   media: [{ type: "image", url: "https://pbs.twimg.com/a.jpg", alt: "图" }]
 });
 
@@ -82,5 +88,15 @@ assert.match(markdown, /# 文章标题/);
 assert.match(markdown, /author: "Ada Lovelace"/);
 assert.match(markdown, /第一行\n第二行/);
 assert.match(markdown, /!\[图\]\(https:\/\/pbs.twimg.com\/a\.jpg\)/);
+assert.match(markdown, /## 评论/);
+assert.match(markdown, /这是一条评论/);
 assert.equal(safeFilename("@ada-12345"), "@ada-12345");
 assert.equal(safeFilename("bad/name?.md"), "bad-name-.md");
+
+const commentsMarkdown = context.globalThis.XMarkdown.formatComments([
+  { authorName: "评论用户", text: "评论一" },
+  { authorName: "另一用户", text: "评论二" }
+]);
+assert.match(commentsMarkdown, /# 评论汇总/);
+assert.match(commentsMarkdown, /评论一/);
+assert.match(commentsMarkdown, /评论二/);

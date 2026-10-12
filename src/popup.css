@@ -71,6 +71,40 @@ h1 {
   gap: 6px;
 }
 
+.filters {
+  align-items: center;
+  border-bottom: 1px solid #eaecf0;
+  display: flex;
+  gap: 14px;
+  padding: 8px 12px;
+}
+
+.filter-option {
+  align-items: center;
+  color: #475467;
+  cursor: pointer;
+  display: flex;
+  font-size: 12px;
+  gap: 5px;
+}
+
+.filter-option input {
+  accent-color: #75b32d;
+  height: 15px;
+  width: 15px;
+}
+
+.filter-option em {
+  background: #eaecf0;
+  border-radius: 999px;
+  color: #667085;
+  font-size: 11px;
+  font-style: normal;
+  min-width: 18px;
+  padding: 1px 5px;
+  text-align: center;
+}
+
 .post-list {
   max-height: 300px;
   overflow-y: auto;
@@ -120,6 +154,23 @@ h1 {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.post-kind {
+  background: #eef7e5;
+  border-radius: 4px;
+  color: #527c1b;
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  margin-right: 5px;
+  padding: 2px 5px;
+  vertical-align: 1px;
+}
+
+.post-kind.comment {
+  background: #eef4ff;
+  color: #315ea8;
 }
 
 .post-summary {
