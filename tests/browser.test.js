@@ -102,6 +102,47 @@ async function main() {
       return canvas.width;
     });
     assert.equal(qrSize, 190);
+    async function checkScrollLayout(panel) {
+      const layout = await popup.evaluate(panelSelector => {
+        const root = document.documentElement;
+        const expected = document.querySelector(panelSelector);
+        const scrollers = Array.from(document.querySelectorAll("*")).filter(node => {
+          const css = getComputedStyle(node);
+          return (css.overflowY === "auto" || css.overflowY === "scroll") &&
+            node.clientHeight > 0 && node.scrollHeight > node.clientHeight + 1;
+        });
+        return {
+          rootFits: root.scrollHeight <= root.clientHeight + 1,
+          scrollers: scrollers.map(node => node.id || node.className),
+          expected: expected.id
+        };
+      }, panel);
+      assert.equal(layout.rootFits, true, "根容器不能溢出并产生外层滚动");
+      assert.ok(layout.scrollers.length <= 1, JSON.stringify(layout));
+      if (layout.scrollers.length) assert.equal(layout.scrollers[0], layout.expected);
+    }
+    for (const height of [600, 400]) {
+      await popup.setViewportSize({ width: 384, height });
+      await popup.locator("#tab-license").click();
+      await checkScrollLayout("#license-panel");
+      await popup.locator("#tab-export").click();
+      await checkScrollLayout("#post-list");
+    }
+    await popup.setViewportSize({ width: 384, height: 600 });
+    async function setPopupZoom(factor) {
+      await bridge.evaluate(async zoom => {
+        const tabs = await chrome.tabs.query({});
+        // This isolated profile creates the popup tab last; URL visibility does not require extra permissions.
+        const target = tabs.sort((a, b) => b.id - a.id)[0];
+        await chrome.tabs.setZoom(target.id, zoom);
+      }, factor);
+    }
+    await setPopupZoom(1.5);
+    await popup.locator("#tab-license").click();
+    await checkScrollLayout("#license-panel");
+    await popup.locator("#tab-export").click();
+    await checkScrollLayout("#post-list");
+    await setPopupZoom(1);
     if (process.env.XMD_PREVIEW_DIR) {
       await popup.locator("#tab-license").click();
       await popup.setViewportSize({ width: 384, height: 600 });

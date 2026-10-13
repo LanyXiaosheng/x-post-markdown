@@ -139,3 +139,10 @@ https://lanyxiaosheng.cloud:8443/xmd-api/ 访问。只新增独立 location，�
 帖子按钮使用同一份 assets/logo.svg，与扩展工具栏统一黑底和 #ddff03。
 网页只能访问此公开 Logo 资源，匹配范围限制在 X/Twitter；脚本与授权配置不暴露。
 图标显示 24px，按钮保留 34px 点击区域，悬停使用半透明品牌色。
+
+### 2026-10-13 - 0.3.3 修复双滚动条
+
+原 .popup 的 max-height 未包含上下 padding，总高度超过 Chrome 的弹窗上限，
+同时 .popup 和浏览器根容器产生滚动。现使用 border-box 限定整个弹窗高度，
+html/body/外层禁止滚动，头部不收缩，剩余空间由 flex 分配给当前面板。
+Pro 只在 license-panel 滚动，导出页只在 post-list 滚动；小高度视口自动缩短面板。
