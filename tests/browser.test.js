@@ -40,6 +40,10 @@ async function main() {
     }));
     await xPage.goto("https://x.com/home");
     await xPage.locator(".xmd-export-button").first().waitFor();
+    await xPage.waitForFunction(() => {
+      const image = document.querySelector(".xmd-export-icon");
+      return image && image.complete && image.naturalWidth > 0;
+    });
     const bridge = await browser.newPage();
     await bridge.goto("chrome-extension://" + extensionId + "/src/popup.html");
     const tabId = await bridge.evaluate(async () => {
@@ -118,7 +122,9 @@ async function main() {
     }
     assert.ok(completedDownloads.every(file => file.state === "complete"), "下载应完成");
     for (const download of completedDownloads) {
-      assert.match(fs.readFileSync(download.filename, "utf8"), /测试正文/);
+      const content = fs.readFileSync(download.filename, "utf8");
+      assert.match(content, /测试正文/);
+      assert.doesNotMatch(content, /chrome-extension:|assets\/logo\.svg/);
     }
     await xPage.goto("https://x.com/tester/status/1");
     await xPage.locator(".xmd-export-button").first().waitFor();

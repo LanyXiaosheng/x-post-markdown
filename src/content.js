@@ -34,6 +34,7 @@
     var items = [];
     var seen = {};
     article.querySelectorAll('img[src]').forEach(function (image) {
+      if (image.closest(".xmd-export-button")) return;
       var src = image.currentSrc || image.src;
       var isAvatar = image.closest(
         '[data-testid="UserAvatar-Container"], [data-testid="Tweet-User-Avatar"], [data-testid="User-Name"]'
@@ -73,6 +74,7 @@
     if (blocks.length) {
       var items = [];
       article.querySelectorAll('[class*="longform-"], table, img[src], video').forEach(function (node) {
+        if (node.closest(".xmd-export-button")) return;
         var blockIndex = blocks.indexOf(node);
         if (blockIndex >= 0) {
           items.push({ kind: "block", node: node });
@@ -185,14 +187,14 @@
     button.className = "xmd-export-button";
     button.setAttribute("aria-label", "导出为 Markdown");
     button.title = "导出这条 X 帖子为 Markdown";
-    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("aria-hidden", "true");
-    svg.setAttribute("focusable", "false");
-    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", "M6 3h8l4 4v5M14 3v4h4M6 3v16h5M16 12v8m-3-3 3 3 3-3");
-    svg.appendChild(path);
-    button.appendChild(svg);
+    var icon = document.createElement("img");
+    icon.className = "xmd-export-icon";
+    icon.src = chrome.runtime.getURL("assets/logo.svg");
+    icon.alt = "";
+    icon.setAttribute("aria-hidden", "true");
+    icon.width = 24;
+    icon.height = 24;
+    button.appendChild(icon);
     button.addEventListener("click", function (event) {
       event.preventDefault();
       event.stopPropagation();

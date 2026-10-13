@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "XMD · 帖子归档",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "一键把当前 X 帖子导出为本地 Markdown 文件。",
   "permissions": ["activeTab", "contextMenus", "downloads", "storage"],
   "host_permissions": [
@@ -35,6 +35,13 @@
       "run_at": "document_idle"
     }
   ],
+  "web_accessible_resources": [{
+    "resources": ["assets/logo.svg"],
+    "matches": [
+      "https://x.com/*", "https://www.x.com/*",
+      "https://twitter.com/*", "https://mobile.twitter.com/*"
+    ]
+  }],
   "commands": {
     "export-current-post": {
       "suggested_key": {

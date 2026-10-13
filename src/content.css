@@ -1,7 +1,7 @@
 .xmd-export-button {
   --xmd-brand: #ddff03;
   align-items: center;
-  background: var(--xmd-brand);
+  background: transparent;
   border: 0;
   border-radius: 999px;
   box-sizing: border-box;
@@ -17,7 +17,7 @@
 }
 
 .xmd-export-button:hover {
-  background: var(--xmd-brand);
+  background: rgba(221, 255, 3, 0.18);
   color: #171b16;
   box-shadow: 0 0 0 2px rgba(221, 255, 3, 0.25);
 }
@@ -27,14 +27,12 @@
   outline-offset: 2px;
 }
 
-.xmd-export-button svg {
-  fill: none;
-  height: 18px;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.8;
-  width: 18px;
+.xmd-export-button .xmd-export-icon {
+  display: block;
+  height: 24px;
+  width: 24px;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .xmd-toast {

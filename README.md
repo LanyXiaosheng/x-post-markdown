@@ -35,11 +35,11 @@ Chrome Manifest V3 扩展，把 X 帖子、长文和评论保存为本地 Markdo
 
 普通帖子下载文件名默认为 @用户名-帖子ID.md；X Article 使用长文标题.md。
 
-## 更新到 0.3.1
+## 更新到 0.3.2
 
-解压 x-post-markdown-v0.3.1.zip，加载包含 manifest.json 的目录。
-在 chrome://extensions 确认实际启用的扩展版本为 0.3.1，并刷新 X 页面。
-弹窗显示 v0.3.1。
+解压 x-post-markdown-v0.3.2.zip，加载包含 manifest.json 的目录。
+在 chrome://extensions 确认实际启用的扩展版本为 0.3.2，并刷新 X 页面。
+弹窗显示 v0.3.2。帖子旁边的导出按钮与工具栏共用同一品牌 Logo。
 
 “激活 Pro”页面可输入已有激活码。支付配置暂缺，购买入口显示待开通；
 配置正式微信/支付宝商户信息并验证真实订单前，不接受收款。
