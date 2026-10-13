@@ -35,11 +35,11 @@ Chrome Manifest V3 扩展，把 X 帖子、长文和评论保存为本地 Markdo
 
 普通帖子下载文件名默认为 @用户名-帖子ID.md；X Article 使用长文标题.md。
 
-## 更新到 0.3.4
+## 更新到 0.3.5
 
-解压 x-post-markdown-v0.3.4.zip，加载包含 manifest.json 的目录。
-在 chrome://extensions 确认实际启用的扩展版本为 0.3.4，并刷新 X 页面。
-弹窗显示 v0.3.4。页内按钮采用原生灰色细线下载箭头，悬停以淡黄色提示；
+解压 x-post-markdown-v0.3.5.zip，加载包含 manifest.json 的目录。
+在 chrome://extensions 确认实际启用的扩展版本为 0.3.5，并刷新 X 页面。
+弹窗显示 v0.3.5。页内按钮采用原生灰色细线下载箭头，悬停以淡黄色提示；
 浏览器工具栏与弹窗保留 #ddff03 品牌 Logo。
 弹窗头部固定，导出页仅列表滚动，Pro 页仅面板滚动，避免内外双滚动条。
 
@@ -62,6 +62,8 @@ Node 内置测试：node --test tests/background.test.js tests/markdown.test.js 
 浏览器集成测试：node tests/browser.test.js，使用测试环境提供的 Playwright。
 可用 XMD_CHROMIUM 指定支持开发者扩展的 Chromium 可执行文件。
 浏览器测试使用独立临时配置、模拟 X 页面和临时下载目录，不需要 X 登录。
+tests/popup-window.test.js 使用 chrome.action.openPopup 实际打开工具栏弹窗，
+单独验证原生弹窗尺寸，避免普通标签页验证遗漏自动定尺寸行为。
 
 ## 主要模块
 
