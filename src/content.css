@@ -5,7 +5,7 @@
   border: 0;
   border-radius: 999px;
   box-sizing: border-box;
-  color: #171b16;
+  color: var(--xmd-muted, #536471);
   cursor: pointer;
   display: inline-flex;
   flex: 0 0 auto;
@@ -17,21 +17,24 @@
 }
 
 .xmd-export-button:hover {
-  background: rgba(221, 255, 3, 0.18);
-  color: #171b16;
-  box-shadow: 0 0 0 2px rgba(221, 255, 3, 0.25);
+  background: rgba(221, 255, 3, 0.12);
+  color: var(--xmd-muted, #536471);
 }
 
 .xmd-export-button:focus-visible {
-  outline: 2px solid #171b16;
+  outline: 2px solid var(--xmd-muted, #536471);
   outline-offset: 2px;
 }
 
 .xmd-export-button .xmd-export-icon {
   display: block;
-  height: 24px;
-  width: 24px;
-  object-fit: contain;
+  height: 19px;
+  width: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   pointer-events: none;
 }
 
@@ -52,3 +55,8 @@
 }
 
 .xmd-toast-error { border-color: #ad6d46; }
+
+@media (prefers-color-scheme: dark) {
+  .xmd-export-button { color: var(--xmd-muted, #71767b); }
+  .xmd-export-button:hover { color: var(--xmd-muted, #aeb7bf); }
+}

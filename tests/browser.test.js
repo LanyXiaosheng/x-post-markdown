@@ -40,10 +40,7 @@ async function main() {
     }));
     await xPage.goto("https://x.com/home");
     await xPage.locator(".xmd-export-button").first().waitFor();
-    await xPage.waitForFunction(() => {
-      const image = document.querySelector(".xmd-export-icon");
-      return image && image.complete && image.naturalWidth > 0;
-    });
+    await xPage.locator("svg.xmd-export-icon path").first().waitFor();
     const bridge = await browser.newPage();
     await bridge.goto("chrome-extension://" + extensionId + "/src/popup.html");
     const tabId = await bridge.evaluate(async () => {

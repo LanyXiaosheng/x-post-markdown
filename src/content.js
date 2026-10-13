@@ -187,13 +187,14 @@
     button.className = "xmd-export-button";
     button.setAttribute("aria-label", "导出为 Markdown");
     button.title = "导出这条 X 帖子为 Markdown";
-    var icon = document.createElement("img");
-    icon.className = "xmd-export-icon";
-    icon.src = chrome.runtime.getURL("assets/logo.svg");
-    icon.alt = "";
+    var icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    icon.classList.add("xmd-export-icon");
+    icon.setAttribute("viewBox", "0 0 24 24");
     icon.setAttribute("aria-hidden", "true");
-    icon.width = 24;
-    icon.height = 24;
+    icon.setAttribute("focusable", "false");
+    var arrow = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    arrow.setAttribute("d", "M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4");
+    icon.appendChild(arrow);
     button.appendChild(icon);
     button.addEventListener("click", function (event) {
       event.preventDefault();
@@ -227,6 +228,8 @@
     var button = createExportButton(article);
     var headerAnchor = findHeaderAnchor(article);
     if (headerAnchor && headerAnchor.parentElement) {
+      var nativeIcon = headerAnchor.querySelector("svg") || headerAnchor;
+      button.style.setProperty("--xmd-muted", getComputedStyle(nativeIcon).color);
       headerAnchor.parentElement.insertBefore(button, headerAnchor);
       return;
     }
