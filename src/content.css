@@ -1,10 +1,11 @@
 .xmd-export-button {
+  --xmd-brand: #ddff03;
   align-items: center;
-  background: rgba(117, 179, 45, 0.10);
+  background: var(--xmd-brand);
   border: 0;
   border-radius: 999px;
   box-sizing: border-box;
-  color: rgb(103, 151, 41);
+  color: #171b16;
   cursor: pointer;
   display: inline-flex;
   flex: 0 0 auto;
@@ -16,12 +17,13 @@
 }
 
 .xmd-export-button:hover {
-  background: rgba(117, 179, 45, 0.14);
-  color: rgb(78, 124, 22);
+  background: var(--xmd-brand);
+  color: #171b16;
+  box-shadow: 0 0 0 2px rgba(221, 255, 3, 0.25);
 }
 
 .xmd-export-button:focus-visible {
-  outline: 2px solid rgb(29, 155, 240);
+  outline: 2px solid #171b16;
   outline-offset: 2px;
 }
 
@@ -43,10 +45,10 @@
   transform: translateX(-50%);
   max-width: min(480px, calc(100vw - 32px));
   padding: 12px 18px;
-  border: 1px solid #608139;
+  border: 1px solid #ddff03;
   border-radius: 12px;
-  background: #182219;
-  color: #edf5e7;
+  background: #171b16;
+  color: #f7f8f2;
   font: 500 13px/1.5 system-ui, sans-serif;
   box-shadow: 0 8px 30px #0003;
 }
