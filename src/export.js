@@ -65,6 +65,7 @@
   }
 
   async function runJobs(jobs, onProgress) {
+    if (global.XLicense) await global.XLicense.authorize(jobs);
     var results = [];
     for (var index = 0; index < jobs.length; index += 1) {
       results.push(await download(jobs[index]));

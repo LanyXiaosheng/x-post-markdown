@@ -151,18 +151,30 @@
   }
 
   function notify(message, isError) {
-    chrome.runtime.sendMessage({ type: "XMD_STATUS", message: message, isError: Boolean(isError) });
+    var previous = document.querySelector(".xmd-toast");
+    if (previous) previous.remove();
+    var toast = document.createElement("div");
+    toast.className = "xmd-toast" + (isError ? " xmd-toast-error" : "");
+    toast.setAttribute("role", isError ? "alert" : "status");
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(function () { toast.remove(); }, 5000);
   }
 
   function requestExport(article) {
-    var post = extractPost(article || findCurrentArticle());
+    var target = article || findCurrentArticle();
+    var post = extractPost(target);
     if (!post || (!post.text && !post.url)) {
       notify("没有找到可导出的帖子，请打开帖子详情页后重试。", true);
       return;
     }
+    var articles = Array.from(document.querySelectorAll('article[data-testid="tweet"]'));
+    post.kind = isCommentArticle(target, articles.indexOf(target), isDetailPage()) ? "comment" : "post";
     chrome.runtime.sendMessage({ type: "XMD_EXPORT", post: post }, function (response) {
       if (chrome.runtime.lastError || !response || !response.ok) {
-        notify("导出失败，请刷新 X 页面后重试。", true);
+        notify(response && response.error || "导出失败，请刷新 X 页面后重试。", true);
+      } else {
+        notify("Markdown 已开始下载", false);
       }
     });
   }
@@ -173,11 +185,14 @@
     button.className = "xmd-export-button";
     button.setAttribute("aria-label", "导出为 Markdown");
     button.title = "导出这条 X 帖子为 Markdown";
-    button.innerHTML = [
-      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">',
-      '<path d="M12 14V3m0 0 4 4m-4-4L8 7M5 12v7h14v-7"></path>',
-      "</svg>"
-    ].join("");
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M6 3h8l4 4v5M14 3v4h4M6 3v16h5M16 12v8m-3-3 3 3 3-3");
+    svg.appendChild(path);
+    button.appendChild(svg);
     button.addEventListener("click", function (event) {
       event.preventDefault();
       event.stopPropagation();

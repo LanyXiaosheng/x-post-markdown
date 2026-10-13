@@ -36,6 +36,7 @@ function setup(downloadError) {
   const context = vm.createContext({ chrome, setTimeout, clearTimeout });
   context.importScripts = (...files) => files.forEach(file => {
     vm.runInContext(fs.readFileSync(path.join(__dirname, "../src", file), "utf8"), context);
+    if (file === "config.js") context.XMDConfig = Object.assign({}, context.XMDConfig, { licenseRequired: false });
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname, "../src/background.js"), "utf8"), context);
   return {

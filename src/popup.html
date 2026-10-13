@@ -3,19 +3,28 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>X 帖子导出</title>
+    <title>XMD · 帖子归档</title>
     <link rel="stylesheet" href="popup.css">
   </head>
   <body>
     <main class="popup">
       <div class="brand">
-        <span class="brand-mark">𝕏</span>
+        <img class="brand-mark" src="../assets/logo.svg" alt="XMD 标识">
         <div>
-          <h1>帖子导出</h1>
-          <p>批量保存为本地 Markdown · <span id="version"></span></p>
+          <h1>XMD <span class="brand-name">帖子归档</span></h1>
+          <p>把值得留下的内容，保存下来。</p>
         </div>
+        <span id="version" class="version"></span>
       </div>
 
+      <nav class="tabs" aria-label="功能">
+        <button id="tab-export" type="button" class="tab active" aria-pressed="true">内容导出</button>
+        <button id="tab-license" type="button" class="tab" aria-pressed="false">
+          <span id="plan-badge">免费版</span> · <span id="plan-action">激活 Pro</span>
+        </button>
+      </nav>
+
+      <div id="export-panel">
       <section class="scan-panel" aria-labelledby="scan-title">
         <div class="scan-head">
           <strong id="scan-title">正在识别当前页面…</strong>
@@ -39,12 +48,53 @@
         <div id="post-list" class="post-list" aria-live="polite"></div>
       </section>
 
-      <button id="export" class="primary" type="button" disabled>导出选中帖子</button>
+      <button id="export" class="primary" type="button" disabled>导出选中内容</button>
       <p id="status" class="status">正在扫描当前页面已加载的帖子…</p>
       <p class="hint">只导出已加载内容。批量下载提交完毕前，请保持弹窗打开。</p>
+      </div>
+
+      <section id="license-panel" hidden aria-labelledby="pro-title">
+        <div class="pro-card">
+          <span class="eyebrow">XMD PRO · 永久版</span>
+          <h2 id="pro-title">让收藏变成你的知识库</h2>
+          <div class="price">¥29.90 <span>一次购买 · 1 个浏览器安装</span></div>
+          <ul class="benefits">
+            <li>批量勾选，一次保存多条帖子</li>
+            <li>完整长文，保留结构与图片顺序</li>
+            <li>评论汇总，连同讨论一起归档</li>
+          </ul>
+          <p class="free-note">普通单帖免费导出，激活后解锁全部功能。</p>
+        </div>
+        <div id="license-state" class="license-state" role="status">尚未激活 Pro</div>
+        <form id="activation-form">
+          <label for="activation-code" class="field-label">已有激活码</label>
+          <div class="activation-row">
+            <input id="activation-code" name="code" type="text" autocomplete="off" spellcheck="false"
+              placeholder="输入 XMD 激活码" maxlength="100" required>
+            <button id="activate" class="activate-button" type="submit">激活</button>
+          </div>
+        </form>
+        <p id="activation-status" class="status" role="status"></p>
+        <div class="purchase-row">
+          <select id="payment-method" aria-label="支付方式" disabled>
+            <option value="wechat">微信支付</option>
+            <option value="alipay">支付宝</option>
+          </select>
+          <button id="purchase" class="purchase-button" type="button" disabled>支付开通中</button>
+        </div>
+        <p id="purchase-status" class="hint">自动支付正在配置，暂未开放收款。已有激活码可直接激活。</p>
+        <a id="checkout-link" class="checkout-link" hidden target="_blank" rel="noopener noreferrer">打开支付页面</a>
+        <canvas id="payment-qr" hidden aria-label="微信支付二维码"></canvas>
+        <p class="privacy-note">授权永久，联网自动续验；有效授权缓存可离线使用最多 7 天。帖子内容保留在本地。</p>
+      </section>
     </main>
+    <script src="config.js"></script>
+    <script src="vendor/ed25519.js"></script>
+    <script src="license.js"></script>
     <script src="markdown.js"></script>
     <script src="export.js"></script>
     <script src="popup.js"></script>
+    <script src="activation-ui.js"></script>
+    <script src="vendor/qrcode.js"></script>
   </body>
 </html>

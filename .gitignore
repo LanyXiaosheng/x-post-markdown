@@ -1,0 +1,11 @@
+.idea/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+*.key
+*.sqlite3
+*.sqlite3-*
+*.pem
+node_modules/

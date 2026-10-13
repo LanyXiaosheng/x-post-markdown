@@ -1,4 +1,4 @@
-importScripts("markdown.js", "export.js");
+importScripts("config.js", "vendor/ed25519.js", "license.js", "markdown.js", "export.js");
 
 (function initBackground() {
   "use strict";
@@ -23,7 +23,7 @@ importScripts("markdown.js", "export.js");
 
   function runExport(jobs, sendResponse) {
     XExport.runJobs(jobs).then(sendResponse).catch(function (error) {
-      sendResponse({ ok: false, count: 0, failed: jobs.length, errors: [error.message] });
+      sendResponse({ ok: false, count: 0, failed: jobs.length, error: error.message, errors: [error.message] });
     });
   }
 
