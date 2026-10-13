@@ -11,6 +11,8 @@
   var scanTitle = document.getElementById("scan-title");
   var status = document.getElementById("status");
   var posts = [];
+  var exporting = false;
+  document.getElementById("version").textContent = "v" + chrome.runtime.getManifest().version;
 
   function setStatus(message, isError) {
     status.textContent = message;
@@ -55,7 +57,7 @@
     var selected = selectedPosts();
     selectAll.checked = visible.length > 0 && selected.length === visible.length;
     selectAll.indeterminate = selected.length > 0 && selected.length < visible.length;
-    exportButton.disabled = selected.length === 0;
+    exportButton.disabled = exporting || selected.length === 0;
     exportButton.textContent = selected.length
       ? "导出选中内容（" + selected.length + "）"
       : "导出选中内容";
@@ -156,24 +158,29 @@
   filterPost.addEventListener("change", applyFilters);
   filterComment.addEventListener("change", applyFilters);
 
-  exportButton.addEventListener("click", function () {
+  exportButton.addEventListener("click", async function () {
     var selected = selectedPosts();
-    if (!selected.length) return;
+    if (!selected.length || exporting) return;
+    exporting = true;
     exportButton.disabled = true;
     setStatus("正在按类型导出 " + selected.length + " 条内容…", false);
-    chrome.runtime.sendMessage({ type: "XMD_EXPORT_BATCH", posts: selected }, function (response) {
-      if (chrome.runtime.lastError || !response) {
-        setStatus("批量导出失败，请刷新 X 页面后重试。", true);
-        exportButton.disabled = false;
-        return;
-      }
+    try {
+      var jobs = XExport.createJobs(selected);
+      var response = await XExport.runJobs(jobs, function (completed, total) {
+        setStatus("已提交下载 " + completed + " / " + total + " 个文件…", false);
+      });
       if (response.ok) {
         setStatus("已开始下载 " + response.count + " 个 Markdown 文件。", false);
       } else {
-        setStatus("已下载 " + response.count + " 个，失败 " + response.failed + " 个。", true);
+        var details = response.errors.join("；");
+        setStatus("已提交 " + response.count + " 个，失败 " + response.failed + " 个：" + details, true);
       }
-      exportButton.disabled = false;
-    });
+    } catch (error) {
+      setStatus("批量导出失败：" + (error.message || String(error)), true);
+    } finally {
+      exporting = false;
+      syncSelection();
+    }
   });
 
   scanCurrentPage();

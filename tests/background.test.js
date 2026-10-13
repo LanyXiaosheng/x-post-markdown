@@ -2,122 +2,114 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
-
-const markdownSource = fs.readFileSync(path.join(__dirname, "..", "src", "markdown.js"), "utf8");
-const backgroundSource = fs
-  .readFileSync(path.join(__dirname, "..", "src", "background.js"), "utf8")
-  .replace(/^importScripts\("markdown\.js"\);\s*/u, "");
+const test = require("node:test");
 
 function event() {
-  const target = {};
-  target.addListener = (listener) => { target.listener = listener; };
-  return target;
+  return { addListener(listener) { this.listener = listener; } };
 }
 
-const chrome = {
-  contextMenus: {
-    onClicked: event(),
-    removeAll: (callback) => callback(),
-    create: () => {}
-  },
-  downloads: {
-    download: (options, callback) => {
-      chrome.downloadOptions = options;
-      chrome.downloadCount = (chrome.downloadCount || 0) + 1;
-      callback(99);
+function setup(downloadError) {
+  const calls = [];
+  let pending = 0;
+  let maxPending = 0;
+  const chrome = {
+    contextMenus: { onClicked: event(), removeAll: cb => cb(), create() {} },
+    commands: { onCommand: event() },
+    tabs: { sendMessage() {}, query() {} },
+    runtime: { onInstalled: event(), onStartup: event(), onMessage: event(), lastError: null },
+    downloads: {
+      download(options, callback) {
+        calls.push(options);
+        pending += 1;
+        maxPending = Math.max(maxPending, pending);
+        const error = downloadError && downloadError(options, calls.length);
+        if (error === "throw") { pending -= 1; throw new Error("同步下载异常"); }
+        setTimeout(() => {
+          pending -= 1;
+          chrome.runtime.lastError = error ? { message: error } : null;
+          callback(error ? undefined : calls.length);
+          chrome.runtime.lastError = null;
+        }, 2);
+      }
     }
-  },
-  commands: { onCommand: event() },
-  tabs: { sendMessage: () => {}, query: () => {} },
-  runtime: {
-    onInstalled: event(),
-    onStartup: event(),
-    onMessage: event(),
-    lastError: null
-  }
-};
+  };
+  const context = vm.createContext({ chrome, setTimeout, clearTimeout });
+  context.importScripts = (...files) => files.forEach(file => {
+    vm.runInContext(fs.readFileSync(path.join(__dirname, "../src", file), "utf8"), context);
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname, "../src/background.js"), "utf8"), context);
+  return {
+    calls, context, maxPending: () => maxPending,
+    send(message) {
+      return new Promise(resolve => {
+        assert.equal(chrome.runtime.onMessage.listener(message, {}, resolve), true);
+      });
+    }
+  };
+}
 
-const context = { chrome, console, Date, encodeURIComponent };
-vm.runInNewContext(markdownSource, context);
-vm.runInNewContext(backgroundSource, context);
+function post(id, extra) {
+  return Object.assign({
+    url: "https://x.com/ada/status/" + id,
+    authorUsername: "ada", text: "正文 " + id, kind: "post", media: []
+  }, extra);
+}
 
-const post = {
-  authorName: "Ada Lovelace",
-  authorUsername: "ada",
-  publishedAt: "2026-10-10T08:00:00.000Z",
-  url: "https://x.com/ada/status/12345",
-  text: "可导出的帖子",
-  media: []
-};
-let response;
-const handled = chrome.runtime.onMessage.listener({ type: "XMD_EXPORT", post }, {}, (value) => {
-  response = value;
+test("single-post messages still download with ID or article title", async () => {
+  const app = setup();
+  assert.equal((await app.send({ type: "XMD_EXPORT", post: post(1) })).ok, true);
+  assert.equal(app.calls[0].filename, "@ada-1.md");
+  await app.send({ type: "XMD_EXPORT", post: post(2, { title: "长文标题" }) });
+  assert.equal(app.calls[1].filename, "长文标题.md");
 });
 
-assert.equal(handled, true);
-assert.equal(response.ok, true);
-assert.equal(chrome.downloadOptions.filename, "@ada-12345.md");
-assert.equal(chrome.downloadOptions.saveAs, false);
-assert.equal(chrome.downloadOptions.conflictAction, "uniquify");
-assert.match(decodeURIComponent(chrome.downloadOptions.url), /可导出的帖子/);
-
-post.title = "从 0 到 1：个人视觉 IP";
-chrome.runtime.onMessage.listener({ type: "XMD_EXPORT", post }, {}, (value) => {
-  response = value;
+test("asynchronous batch queues 40 files, including missing URLs", async () => {
+  const app = setup();
+  const items = Array.from({ length: 40 }, (_, i) => post(i));
+  delete items[10].url;
+  const result = await app.send({ type: "XMD_EXPORT_BATCH", posts: items });
+  assert.equal(result.count, 40);
+  assert.equal(result.failed, 0);
+  assert.equal(app.maxPending(), 1);
+  assert.equal(app.calls.length, 40);
 });
-assert.equal(response.ok, true);
-assert.equal(chrome.downloadOptions.filename, "从 0 到 1：个人视觉 IP.md");
 
-chrome.downloadCount = 0;
-const secondPost = { ...post, title: "第二篇长文", url: "https://x.com/ada/article/67890" };
-chrome.runtime.onMessage.listener(
-  { type: "XMD_EXPORT_BATCH", posts: [post, secondPost] },
-  {},
-  (value) => { response = value; }
-);
-assert.equal(response.ok, true);
-assert.equal(response.count, 2);
-assert.equal(response.failed, 0);
-assert.equal(chrome.downloadCount, 2);
+test("download errors are reported and subsequent items still run", async () => {
+  const app = setup((options, index) => index === 2 ? "File access denied" : index === 3 ? "throw" : null);
+  const result = await app.send({
+    type: "XMD_EXPORT_BATCH", posts: [post(1), post(2), post(3), post(4)]
+  });
+  assert.equal(result.count, 2);
+  assert.equal(result.failed, 2);
+  assert.equal(app.calls.length, 4);
+  assert.match(result.errors.join(" "), /File access denied/);
+  assert.match(result.errors.join(" "), /同步下载异常/);
+});
 
-const comment = {
-  kind: "comment",
-  parentUrl: post.url,
-  authorName: "评论用户",
-  authorUsername: "commenter",
-  text: "评论内容",
-  url: "https://x.com/commenter/status/999",
-  media: []
-};
-chrome.downloadCount = 0;
-chrome.runtime.onMessage.listener(
-  { type: "XMD_EXPORT_BATCH", posts: [post, comment] },
-  {},
-  (value) => { response = value; }
-);
-assert.equal(response.ok, true);
-assert.equal(response.count, 1);
-assert.equal(chrome.downloadOptions.filename, "从 0 到 1：个人视觉 IP.md");
-assert.match(decodeURIComponent(chrome.downloadOptions.url), /评论内容/);
+test("formatting failures do not abort the following download", async () => {
+  const app = setup();
+  const result = await app.send({
+    type: "XMD_EXPORT_BATCH", posts: [post(1, { media: { length: 1 } }), post(2)]
+  });
+  assert.equal(result.count, 1);
+  assert.equal(result.failed, 1);
+});
 
-chrome.downloadCount = 0;
-chrome.runtime.onMessage.listener(
-  { type: "XMD_EXPORT_BATCH", posts: [comment, { ...comment, url: "https://x.com/commenter/status/1000" }] },
-  {},
-  (value) => { response = value; }
-);
-assert.equal(response.ok, true);
-assert.equal(response.count, 1);
-assert.equal(chrome.downloadOptions.filename, "评论汇总.md");
-assert.match(decodeURIComponent(chrome.downloadOptions.url), /评论内容/);
+test("comments alone merge; combined selection attaches comments to the matching post", async () => {
+  const app = setup();
+  const comment = post(3, { kind: "comment", parentUrl: post(1).url, text: "评论正文" });
+  await app.send({ type: "XMD_EXPORT_BATCH", posts: [comment, post(4, { kind: "comment" })] });
+  assert.equal(app.calls.length, 1);
+  assert.equal(app.calls[0].filename, "评论汇总.md");
+  await app.send({ type: "XMD_EXPORT_BATCH", posts: [post(1), comment] });
+  assert.equal(app.calls.length, 2);
+  assert.match(decodeURIComponent(app.calls[1].url), /## 评论\n/);
+  assert.match(decodeURIComponent(app.calls[1].url), /评论正文/);
+});
 
-const malformedPost = { authorName: "No URL", text: "仍然可导出", media: [] };
-chrome.downloadCount = 0;
-chrome.runtime.onMessage.listener(
-  { type: "XMD_EXPORT_BATCH", posts: [malformedPost, post] },
-  {},
-  (value) => { response = value; }
-);
-assert.equal(response.ok, true);
-assert.equal(response.count, 2);
-assert.equal(chrome.downloadCount, 2);
+test("popup runner is usable without a background message round trip", async () => {
+  const app = setup();
+  const result = await app.context.XExport.runJobs(app.context.XExport.createJobs([post(1), post(2)]));
+  assert.equal(result.count, 2);
+  assert.equal(app.calls.length, 2);
+});

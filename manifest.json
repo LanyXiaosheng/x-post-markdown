@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "X 帖子快捷导出 Markdown",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "一键把当前 X 帖子导出为本地 Markdown 文件。",
   "permissions": ["activeTab", "contextMenus", "downloads"],
   "host_permissions": ["https://x.com/*", "https://www.x.com/*", "https://twitter.com/*", "https://mobile.twitter.com/*"],

@@ -1,4 +1,4 @@
-importScripts("markdown.js");
+importScripts("markdown.js", "export.js");
 
 (function initBackground() {
   "use strict";
@@ -21,103 +21,10 @@ importScripts("markdown.js");
     });
   }
 
-  function downloadMarkdown(markdown, filenameBase, callback) {
-    try {
-      var filename = XMarkdown.safeFilename(filenameBase) + ".md";
-      var url = "data:text/markdown;charset=utf-8," + encodeURIComponent(markdown);
-      chrome.downloads.download({
-        url: url,
-        filename: filename,
-        saveAs: false,
-        conflictAction: "uniquify"
-      }, function (downloadId) {
-        if (chrome.runtime.lastError) {
-          callback({ ok: false, error: chrome.runtime.lastError.message });
-          return;
-        }
-        callback({ ok: Boolean(downloadId) });
-      });
-    } catch (error) {
-      callback({ ok: false, error: error.message || String(error) });
-    }
-  }
-
-  function downloadPost(post, comments, callback) {
-    if (typeof comments === "function") {
-      callback = comments;
-      comments = [];
-    }
-    try {
-      var data = Object.assign({}, post || {});
-      data.comments = comments || [];
-      var markdown = XMarkdown.formatPost(data);
-      var username = data.authorUsername ? "@" + data.authorUsername : "x-post";
-      var postUrl = typeof data.url === "string" ? data.url : "";
-      var statusId = (postUrl.match(/(?:status|article)\/(\d+)/) || [])[1] || Date.now();
-      var filenameBase = data.title || username + "-" + statusId;
-      downloadMarkdown(markdown, filenameBase, callback);
-    } catch (error) {
-      callback({ ok: false, error: error.message || String(error) });
-    }
-  }
-
-  function downloadComments(comments, callback) {
-    downloadMarkdown(XMarkdown.formatComments(comments), "评论汇总", callback);
-  }
-
-  function groupComments(posts, comments) {
-    var groups = posts.map(function (post) {
-      return { post: post, comments: [] };
+  function runExport(jobs, sendResponse) {
+    XExport.runJobs(jobs).then(sendResponse).catch(function (error) {
+      sendResponse({ ok: false, count: 0, failed: jobs.length, errors: [error.message] });
     });
-    comments.forEach(function (comment) {
-      var target = groups.find(function (group) {
-        return comment.parentUrl && group.post.url === comment.parentUrl;
-      });
-      (target || groups[0]).comments.push(comment);
-    });
-    return groups;
-  }
-
-  function downloadJobs(jobs, sendResponse) {
-    var index = 0;
-    var succeeded = 0;
-    var failed = 0;
-
-    function next() {
-      if (index >= jobs.length) {
-        sendResponse({ ok: failed === 0, count: succeeded, failed: failed });
-        return;
-      }
-      var job = jobs[index];
-      index += 1;
-      var done = function (result) {
-        if (result.ok) succeeded += 1;
-        else failed += 1;
-        next();
-      };
-      if (job.type === "comments") downloadComments(job.comments, done);
-      else downloadPost(job.post, job.comments, done);
-    }
-
-    if (!jobs.length) {
-      sendResponse({ ok: false, count: 0, failed: 0 });
-      return;
-    }
-    next();
-  }
-
-  function downloadBatch(posts, sendResponse) {
-    var selectedPosts = posts.filter(function (post) {
-      return post.kind !== "comment";
-    });
-    var selectedComments = posts.filter(function (post) {
-      return post.kind === "comment";
-    });
-    if (!selectedPosts.length && selectedComments.length) {
-      downloadJobs([{ type: "comments", comments: selectedComments }], sendResponse);
-      return;
-    }
-    downloadJobs(groupComments(selectedPosts, selectedComments), sendResponse);
   }
 
   chrome.runtime.onInstalled.addListener(createMenu);
@@ -138,11 +45,15 @@ importScripts("markdown.js");
   chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if (!message) return false;
     if (message.type === "XMD_EXPORT" && message.post) {
-      downloadPost(message.post, sendResponse);
+      runExport([{ post: message.post, comments: [] }], sendResponse);
       return true;
     }
     if (message.type === "XMD_EXPORT_BATCH" && Array.isArray(message.posts)) {
-      downloadBatch(message.posts, sendResponse);
+      try {
+        runExport(XExport.createJobs(message.posts), sendResponse);
+      } catch (error) {
+        sendResponse({ ok: false, count: 0, failed: 0, errors: [error.message] });
+      }
       return true;
     }
     return false;

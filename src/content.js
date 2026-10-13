@@ -262,7 +262,7 @@
       requestExport();
       sendResponse({ ok: true });
     }
-    return true;
+    return false;
   });
 
   scanTweets();

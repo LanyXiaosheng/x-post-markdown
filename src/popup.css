@@ -130,6 +130,9 @@ h1 {
   border-bottom: 0;
 }
 
+.post-row[hidden] {
+  display: none;
+}
 .post-row:hover {
   background: #f8fafc;
 }

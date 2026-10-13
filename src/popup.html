@@ -12,7 +12,7 @@
         <span class="brand-mark">𝕏</span>
         <div>
           <h1>帖子导出</h1>
-          <p>批量保存为本地 Markdown</p>
+          <p>批量保存为本地 Markdown · <span id="version"></span></p>
         </div>
       </div>
 
@@ -41,8 +41,10 @@
 
       <button id="export" class="primary" type="button" disabled>导出选中帖子</button>
       <p id="status" class="status">正在扫描当前页面已加载的帖子…</p>
-      <p class="hint">默认全选；只会识别当前页面已经加载出来的帖子。</p>
+      <p class="hint">只导出已加载内容。批量下载提交完毕前，请保持弹窗打开。</p>
     </main>
+    <script src="markdown.js"></script>
+    <script src="export.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>
