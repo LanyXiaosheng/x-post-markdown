@@ -177,10 +177,6 @@
       }
     } catch (error) {
       setStatus("批量导出失败：" + (error.message || String(error)), true);
-      if (/激活 Pro/.test(error.message) && globalThis.XMDActivationUI) {
-        globalThis.XMDActivationUI.showPanel(true);
-        document.getElementById("activation-status").textContent = error.message;
-      }
     } finally {
       exporting = false;
       syncSelection();

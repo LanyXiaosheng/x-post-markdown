@@ -35,31 +35,29 @@ async function main() {
     assert.ok(size.width >= 360, "原生弹窗宽度不能收缩为空白小块");
     assert.ok(size.height >= 400, "原生弹窗高度不能收缩");
     assert.match(size.text, /XMD/);
-    await bridge.evaluate(() => {
-      const popup = chrome.extension.getViews({ type: "popup" })[0];
-      popup.document.getElementById("tab-license").click();
-    });
-    const proLayout = await bridge.evaluate(() => {
+    const layout = await bridge.evaluate(() => {
       const popup = chrome.extension.getViews({ type: "popup" })[0];
       const root = popup.document.documentElement;
-      const panel = popup.document.getElementById("license-panel");
       const scrollers = Array.from(popup.document.querySelectorAll("*")).filter(node => {
         const css = popup.getComputedStyle(node);
         return css.overflowY === "auto" && node.clientHeight > 0 &&
           node.scrollHeight > node.clientHeight + 1;
       });
-      panel.scrollTop = panel.scrollHeight;
-      const privacy = popup.document.querySelector(".privacy-note").getBoundingClientRect();
+      const footer = popup.document.querySelector(".hint").getBoundingClientRect();
       return {
         rootFits: root.scrollHeight <= root.clientHeight + 1,
         scrollers: scrollers.map(node => node.id),
-        footerVisible: privacy.bottom <= popup.innerHeight
+        footerVisible: footer.bottom <= popup.innerHeight,
+        free: popup.document.body.innerText.includes("全部免费"),
+        hasPurchase: Boolean(popup.document.getElementById("purchase"))
       };
     });
-    assert.equal(proLayout.rootFits, true);
-    assert.deepEqual(proLayout.scrollers, ["license-panel"]);
-    assert.equal(proLayout.footerVisible, true);
-    process.stdout.write(JSON.stringify({ proLayout }) + "\n");
+    assert.equal(layout.rootFits, true);
+    assert.ok(layout.scrollers.every(id => id === "post-list"));
+    assert.equal(layout.footerVisible, true);
+    assert.equal(layout.free, true);
+    assert.equal(layout.hasPurchase, false);
+    process.stdout.write(JSON.stringify({ layout }) + "\n");
   } finally {
     await browser.close();
   }

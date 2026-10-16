@@ -1,4 +1,4 @@
-importScripts("config.js", "vendor/ed25519.js", "license.js", "markdown.js", "export.js");
+importScripts("markdown.js", "export.js");
 
 (function initBackground() {
   "use strict";

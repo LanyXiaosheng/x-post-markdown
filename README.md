@@ -1,111 +1,61 @@
-# XMD · 帖子归档
+# XMD · 帖子归档（免费版）
 
-Chrome Manifest V3 扩展，把 X 帖子、长文和评论保存为本地 Markdown。
-无需 X API Key；帖文处理在本地完成。授权与订单通过独立后端处理。
+Chrome 扩展，将 X 帖子、长文和评论保存为本地 Markdown。
+当前发布版本 0.4.0：全部导出功能免费，无需激活码、付费或授权服务器。
+无需 X API Key；内容在浏览器本地处理。
 
-## 概述
+## 功能
 
-扩展读取当前已经打开的 X 页面中的可见帖子，提取正文、作者、发布时间、原帖链接和媒体链接，并由 Chrome 直接下载 Markdown。
+- 单帖：点击帖子旁的灰色下载箭头。
+- 批量：打开弹窗自动识别已加载内容，默认全选，可按帖子/评论筛选或逐条取消。
+- 评论：只选评论时汇总为一个文件；同时选择帖子和评论时追加到对应帖文。
+- 长文：保留标题、粗体、列表、链接、表格及图片顺序；文件使用长文标题命名。
+- 表情：直接输出 Emoji 字符。
+- 主题：#ddff03，工具栏保留品牌 Logo；页内使用低干扰的细线图标。
+- 快捷入口：扩展弹窗、帖子按钮、右键菜单、Ctrl+Shift+M。
 
-## 特性
+只识别当前页面已加载的内容，不自动滚动。
+普通帖子默认文件名为 @用户名-帖子ID.md；长文使用长文标题.md。
+同名文件由 Chrome 自动追加序号。图片保留远程链接，不保存媒体文件。
 
-- 免费版：普通单帖导出。
-- Pro：¥29.90 一次购买永久授权，绑定 1 个浏览器安装，解锁批量、长文、评论。
-- 激活：签名凭证、本地缓存、联网续验。激活服务不接收帖文正文。
-- 品牌：折页文档和保存箭头 logo，主题色 #ddff03，适配扩展工具栏和弹窗。
+## 安装和更新
 
-- 当前帖子导出：点击帖子旁的导出图标，下载该条帖子。
-- 批量识别与选择：打开扩展弹窗自动扫描当前页面已加载帖子，默认全选，可取消不需要的帖子后批量下载。
-- 类型筛选与组合导出：区分帖子和评论；只选帖子单独导出，只选评论汇总导出，两者同时选择时把评论追加到对应帖子文件。
-- 批量容错：弹窗直接调用 Chrome 下载接口，逐个提交文件，显示进度和实际失败原因。
-- 表情保真：X 的 Emoji 图片按表情字符导出，例如 😭，不输出图片语法。
-- 长文章保真：识别 X Article 标题、一级/二级/三级标题、粗体、斜体、链接、引用、代码块、有序/无序列表和 HTML 表格。
-- 图片顺序保真：正文图片按文章原始位置插入，不再统一堆到文末。
-- 帖子内快捷按钮：在每条帖子右上角菜单旁增加导出图标，支持时间线快速保存。
-- 右键和快捷键：页面右键菜单以及 Ctrl+Shift+M / ⌘+Shift+M 都可触发导出。
-- 本地优先：不调用 X API、不上传帖子内容，Markdown 在浏览器本地生成。
+1. 解压 x-post-markdown-v0.4.0-free.zip。
+2. 打开 chrome://extensions，开启开发者模式。
+3. 加载包含 manifest.json 的解压目录；已有安装可覆盖原目录后点击重新加载。
+4. 确认扩展版本为 0.4.0，然后刷新 X 页面。
 
-## 安装
+批量提交下载期间保持弹窗打开。
+“已开始下载”表示 Chrome 接受任务，最终保存状态以浏览器下载列表为准。
+本版不展示 Pro/激活/支付入口，也不请求激活或支付服务。
 
-1. 打开 chrome://extensions，开启“开发者模式”。
-2. 点击“加载已解压的扩展”，选择本目录 x-post-markdown。
-3. 登录 X，打开任意帖子详情页或时间线。
-4. 打开扩展弹窗，筛选/勾选帖子和评论，点击“导出选中内容”；批量提交完毕前保持弹窗打开。
-5. 单条导出可以直接点击帖子右上角的导出图标。
+## 构建
 
-普通帖子下载文件名默认为 @用户名-帖子ID.md；X Article 使用长文标题.md。
+运行 scripts/build-free.ps1，输出免费 ZIP 以及一个临时解压目录。
+脚本只复制免费运行文件和品牌资源，不包括激活、支付、二维码、
+签名验证库、授权配置和后端代码。
 
-## 更新到 0.3.5
-
-解压 x-post-markdown-v0.3.5.zip，加载包含 manifest.json 的目录。
-在 chrome://extensions 确认实际启用的扩展版本为 0.3.5，并刷新 X 页面。
-弹窗显示 v0.3.5。页内按钮采用原生灰色细线下载箭头，悬停以淡黄色提示；
-浏览器工具栏与弹窗保留 #ddff03 品牌 Logo。
-弹窗头部固定，导出页仅列表滚动，Pro 页仅面板滚动，避免内外双滚动条。
-
-“激活 Pro”页面可输入已有激活码。支付配置暂缺，购买入口显示待开通；
-配置正式微信/支付宝商户信息并验证真实订单前，不接受收款。
-生产激活服务为 https://lanyxiaosheng.cloud:8443/xmd-api/v1。
-当前默认 443 端口从本机外部请求失败，8443 已通过外部健康检查及实际浏览器激活。
-
-管理命令、支付配置与回调地址见 [后端文档](backend/README.md)。
-永久授权使用 7 天签名缓存；联网自动续验，过期须再次联网。
-更换或删除浏览器配置会产生新的安装标识，迁移需产品方处理。
-
-已开始下载表示 Chrome 已接受下载任务，最终保存状态以 Chrome 下载列表为准。
-仅评论导出为一个评论汇总文件；帖子和评论一起勾选时，按所属帖子追加评论。
-无法对应到选中帖子的评论会另存评论汇总，避免附到无关帖子。
+Logo 源文件为 assets/logo.svg，工具栏 PNG 使用 scripts/build-icons.js
+及开发环境的 sharp 生成。直接加载发布包不需要 Node 或其他开发依赖。
 
 ## 验证
 
-Node 内置测试：node --test tests/background.test.js tests/markdown.test.js tests/license.test.js。
-浏览器集成测试：node tests/browser.test.js，使用测试环境提供的 Playwright。
-可用 XMD_CHROMIUM 指定支持开发者扩展的 Chromium 可执行文件。
-浏览器测试使用独立临时配置、模拟 X 页面和临时下载目录，不需要 X 登录。
-tests/popup-window.test.js 使用 chrome.action.openPopup 实际打开工具栏弹窗，
-单独验证原生弹窗尺寸，避免普通标签页验证遗漏自动定尺寸行为。
+- node --test tests/background.test.js tests/markdown.test.js
+- node tests/browser.test.js：模拟 X 页面、真实下载、免费长文、评论组合、缩放/滚动和无授权网络请求。
+- node tests/popup-window.test.js：真实打开工具栏弹窗，验证尺寸及滚动布局。
 
-## 主要模块
+浏览器测试需开发环境提供 Playwright，可通过 XMD_CHROMIUM 指定 Chromium，
+通过 XMD_EXTENSION 测试打包后的解压目录。测试使用独立临时浏览器配置。
+
+## 当前模块
 
 | 文件 | 职责 |
-|------|------|
-| src/content.js | 读取 X DOM、提取帖子、注入快捷按钮 |
-| src/markdown.js | 生成 Front Matter，并把富文本 DOM 转成 Markdown |
-| src/background.js | 注册右键菜单、快捷键，并按帖子/评论组合规则调用 Chrome 下载 API |
-| src/export.js | 共享导出组合和异步下载队列，供弹窗与后台使用 |
-| src/license.js | 固定公钥校验授权、激活与续验、免费/Pro 访问控制 |
-| src/activation-ui.js | 激活页面、支付待配置状态和收银台/二维码 |
-| src/popup.* | 扫描当前页面、展示复选框并发起批量下载 |
+| --- | --- |
+| src/content.js / content.css | 读取 X 页面、识别帖子/评论、添加导出按钮 |
+| src/markdown.js | 富文本与图文顺序转换 |
+| src/export.js | 按选择组合文件并提交异步下载 |
+| src/background.js | 单帖入口、快捷键、右键菜单 |
+| src/popup.* / popup-layout.js | 免费批量导出界面和原生弹窗尺寸 |
 
-## Logo 和构建
-
-assets/logo.svg 为可编辑源文件，assets/logo.png 与 icons 为生成的图标资源。
-scripts/build-icons.js 使用开发环境的 sharp 栅格化图标。
-scripts/build-qr.js 使用 esbuild 打包 QRCode 和 TweetNaCl；
-两者随扩展本地打包，保留各自许可证，不从 CDN 加载代码。
-无需安装这些开发依赖就能加载发布 ZIP。
-
-## 目录结构
-
-~~~text
-x-post-markdown/
-├── manifest.json
-├── README.md
-├── DESIGN.md
-├── src/
-│   ├── background.js
-│   ├── content.css
-│   ├── content.js
-│   ├── export.js
-│   ├── license.js
-│   ├── config.js
-│   ├── activation-ui.js
-│   ├── markdown.js
-│   ├── popup.css
-│   ├── popup.html
-│   └── popup.js
-└── tests/
-    ├── markdown.test.js
-    ├── background.test.js
-    └── browser.test.js
-~~~
+历史付费模块和 backend 保留在源码仓库，供以后评估，免费版不加载也不打包。
+既有服务器服务未因本次客户端免费发布而改动。

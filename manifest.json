@@ -1,12 +1,11 @@
 {
   "manifest_version": 3,
   "name": "XMD · 帖子归档",
-  "version": "0.3.5",
-  "description": "一键把当前 X 帖子导出为本地 Markdown 文件。",
-  "permissions": ["activeTab", "contextMenus", "downloads", "storage"],
+  "version": "0.4.0",
+  "description": "免费导出 X 帖子、长文和评论为 Markdown，支持批量选择，无需激活。",
+  "permissions": ["activeTab", "contextMenus", "downloads"],
   "host_permissions": [
-    "https://x.com/*", "https://www.x.com/*", "https://twitter.com/*", "https://mobile.twitter.com/*",
-    "https://lanyxiaosheng.cloud/xmd-api/*"
+    "https://x.com/*", "https://www.x.com/*", "https://twitter.com/*", "https://mobile.twitter.com/*"
   ],
   "icons": {
     "16": "assets/icons/icon-16.png", "32": "assets/icons/icon-32.png",

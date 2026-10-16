@@ -2,7 +2,6 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { generateKeyPairSync, sign } = require("node:crypto");
 const { chromium } = require("playwright");
 
 async function main() {
@@ -18,9 +17,12 @@ async function main() {
     ]
   });
   try {
-    if (!process.env.XMD_SMOKE_CREDENTIAL_FILE) {
-      await browser.route("https://lanyxiaosheng.cloud:8443/xmd-api/**", route => route.abort());
-    }
+    const externalRequests = [];
+    browser.on("request", request => {
+      if (/^https?:/.test(request.url()) && !request.url().startsWith("https://x.com/")) {
+        externalRequests.push(request.url());
+      }
+    });
     const downloadDir = path.join(profile, "downloads");
     fs.mkdirSync(downloadDir);
     const control = browser.pages()[0] || await browser.newPage();
@@ -57,49 +59,16 @@ async function main() {
     await popup.goto("chrome-extension://" + extensionId + "/src/popup.html");
     await popup.locator(".post-row").nth(2).waitFor();
     assert.equal(await popup.locator("input[data-post-index]:checked").count(), 3);
-    await popup.locator("#export").click();
-    await popup.locator("#license-panel").waitFor();
-    assert.match(await popup.locator("#activation-status").textContent(), /激活 Pro/);
-    assert.equal(await popup.locator("#purchase").isDisabled(), true);
-    const keys = generateKeyPairSync("ed25519");
-    const publicKey = keys.publicKey.export({ type: "spki", format: "der" }).subarray(-32).toString("base64url");
-    const installation = await popup.evaluate(() => XLicense.installationId());
-    const payload = Buffer.from(JSON.stringify({
-      product: "xmd", plan: "pro", installation_id: installation,
-      exp: Math.floor(Date.now() / 1000) + 3600
-    })).toString("base64url");
-    const token = payload + "." + sign(null, Buffer.from(payload), keys.privateKey).toString("base64url");
-    async function testLicense() {
-      if (process.env.XMD_SMOKE_CREDENTIAL_FILE) {
-        await popup.locator("#tab-export").click();
-        return;
-      }
-      await popup.evaluate(async data => {
-        XMDConfig = Object.assign({}, XMDConfig, { publicKey: data.publicKey });
-        await chrome.storage.local.set({ xmdLicense: data.token });
-      }, { publicKey, token });
-      await popup.locator("#tab-export").click();
-    }
-    if (process.env.XMD_SMOKE_CREDENTIAL_FILE) {
-      const credentials = JSON.parse(fs.readFileSync(process.env.XMD_SMOKE_CREDENTIAL_FILE, "utf8"));
-      await popup.locator("#activation-code").fill(credentials.code);
-      await popup.locator("#activate").click();
-      await popup.waitForFunction(() => document.querySelector("#plan-badge").textContent === "Pro 已激活");
-      assert.match(await popup.locator("#activation-status").textContent(), /激活成功/);
-    }
-    await testLicense();
+    assert.equal(await popup.locator("#license-panel, #activation-form, #purchase").count(), 0);
+    assert.equal(await popup.evaluate(() => typeof XLicense), "undefined");
     await popup.locator("#export").click();
     await popup.waitForFunction(() => !document.querySelector("#export").disabled);
     const status = await popup.locator("#status").textContent();
     const downloads = await bridge.evaluate(() => chrome.downloads.search({}));
     assert.equal(errors.length, 0, errors.join("\n"));
-    const qrSize = await popup.evaluate(async () => {
-      const canvas = document.createElement("canvas");
-      await XMDQRCode.toCanvas(canvas, "weixin://wxpay/bizpayurl?pr=test-render-only", { width: 190 });
-      return canvas.width;
-    });
-    assert.equal(qrSize, 190);
     async function checkScrollLayout(panel) {
+      await popup.waitForFunction(() =>
+        document.documentElement.getBoundingClientRect().height <= window.innerHeight + 1);
       const layout = await popup.evaluate(panelSelector => {
         const root = document.documentElement;
         const expected = document.querySelector(panelSelector);
@@ -120,9 +89,6 @@ async function main() {
     }
     for (const height of [600, 400]) {
       await popup.setViewportSize({ width: 384, height });
-      await popup.locator("#tab-license").click();
-      await checkScrollLayout("#license-panel");
-      await popup.locator("#tab-export").click();
       await checkScrollLayout("#post-list");
     }
     await popup.setViewportSize({ width: 384, height: 600 });
@@ -135,16 +101,10 @@ async function main() {
       }, factor);
     }
     await setPopupZoom(1.5);
-    await popup.locator("#tab-license").click();
-    await checkScrollLayout("#license-panel");
-    await popup.locator("#tab-export").click();
     await checkScrollLayout("#post-list");
     await setPopupZoom(1);
     if (process.env.XMD_PREVIEW_DIR) {
-      await popup.locator("#tab-license").click();
       await popup.setViewportSize({ width: 384, height: 600 });
-      await popup.locator(".popup").screenshot({ path: path.join(process.env.XMD_PREVIEW_DIR, "pro-panel.png") });
-      await popup.locator("#tab-export").click();
       await popup.locator(".popup").screenshot({ path: path.join(process.env.XMD_PREVIEW_DIR, "export-panel.png") });
     }
     assert.match(status, /3 个 Markdown/);
@@ -167,7 +127,6 @@ async function main() {
     await xPage.goto("https://x.com/tester/status/1");
     await xPage.locator(".xmd-export-button").first().waitFor();
     await popup.reload();
-    await testLicense();
     await popup.locator(".post-row").nth(2).waitFor();
     assert.equal(await popup.locator("#post-count").textContent(), "1");
     assert.equal(await popup.locator("#comment-count").textContent(), "2");
@@ -204,6 +163,24 @@ async function main() {
     assert.match(combined, /测试正文 2/);
     assert.match(combined, /测试正文 3/);
 
+    await xPage.evaluate(() => {
+      const article = document.querySelector('article[data-testid="tweet"]');
+      const title = document.createElement("h1");
+      title.dataset.testid = "twitter-article-title";
+      title.textContent = "免费长文";
+      article.appendChild(title);
+      const block = document.createElement("div");
+      block.className = "longform-unstyled";
+      block.setAttribute("data-offset-key", "free-article");
+      block.textContent = "完整长文正文";
+      article.appendChild(block);
+    });
+    await popup.reload();
+    await popup.locator(".post-row").nth(2).waitFor();
+    await popup.locator("#filter-comment").uncheck();
+    const longArticle = await exportSelection(7, /# 免费长文/);
+    assert.match(longArticle, /完整长文正文/);
+
     await popup.evaluate(() => {
       chrome.downloads.download = () => { throw new Error("测试下载权限错误"); };
     });
@@ -213,11 +190,11 @@ async function main() {
     assert.equal(errors.length, 0, errors.join("\n"));
     process.stdout.write(JSON.stringify({
       version: await popup.locator("#version").textContent(),
-      status, completedFiles: 6,
-      liveActivation: Boolean(process.env.XMD_SMOKE_CREDENTIAL_FILE),
-      checks: ["免费版阻止批量", "支付待配置", "Pro 批量落盘", "仅帖子", "仅评论", "帖子附带评论", "错误详情"],
+      status, completedFiles: 7,
+      checks: ["无需授权批量落盘", "仅帖子", "仅评论", "帖子附带评论", "免费长文", "错误详情", "无授权网络请求"],
       errors
     }) + "\n");
+    assert.deepEqual(externalRequests, []);
   } finally {
     await browser.close();
   }

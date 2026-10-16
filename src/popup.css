@@ -30,22 +30,13 @@ body {
   padding: 18px;
 }
 
-.brand, .tabs { flex-shrink: 0; }
+.brand, .free-banner { flex-shrink: 0; }
 #export-panel {
   display: flex;
   flex: 1;
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-}
-#license-panel {
-  flex: 1;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding-right: 6px;
-  scrollbar-gutter: stable;
 }
 #export-panel > .primary, #export-panel > .status, #export-panel > .hint { flex-shrink: 0; }
 
@@ -75,27 +66,21 @@ h1 {
 
 .brand-name { font-size: 14px; font-weight: 600; margin-left: 4px; }
 .version { margin-left: auto; color: #727569; font-size: 10px; }
-.tabs {
+.free-banner {
+  align-items: center;
   display: flex;
-  border: 1px solid #dee0d5;
-  border-radius: 10px;
-  background: #eceee4;
-  padding: 4px;
-  gap: 4px;
+  color: #64695e;
+  font-size: 12px;
+  gap: 10px;
   margin-bottom: 16px;
 }
-.tab {
-  flex: 1;
-  border: 0;
-  border-radius: 7px;
-  padding: 9px 3px;
-  background: transparent;
-  color: #64695e;
-  font-weight: 650;
-  font-size: 12px;
-  cursor: pointer;
+.edition-badge {
+  background: var(--xmd-brand);
+  border-radius: 6px;
+  color: var(--xmd-ink);
+  font-weight: 700;
+  padding: 5px 9px;
 }
-.tab.active { color: var(--xmd-ink); background: var(--xmd-brand); box-shadow: 0 1px 4px #171b1614; }
 [hidden] { display: none !important; }
 button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
   outline: 2px solid var(--xmd-ink);
@@ -273,34 +258,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
   width: 100%;
 }
 
-.pro-card { background: var(--xmd-ink); color: #f7f8f2; border-radius: 14px; padding: 18px; }
-.eyebrow { color: var(--xmd-brand); font-size: 10px; font-weight: 750; letter-spacing: 1.2px; }
-.pro-card h2 { font-size: 19px; margin: 12px 0 14px; letter-spacing: -0.4px; }
-.price { color: var(--xmd-brand); font-size: 31px; font-weight: 750; letter-spacing: -1px; }
-.price span { display: block; font-size: 11px; font-weight: 400; color: #b5baaa; letter-spacing: 0; margin-top: 3px; }
-.benefits { list-style: none; padding: 0; margin: 16px 0; font-size: 12px; line-height: 2; }
-.benefits li::before { content: "✓"; color: var(--xmd-brand); margin-right: 8px; }
-.free-note { font-size: 11px; color: #b5baaa; margin: 0; }
-.license-state { padding: 12px 0; font-size: 12px; color: #596042; }
-.field-label { font-weight: 650; font-size: 12px; display: block; margin-bottom: 7px; }
-.activation-row { display: flex; gap: 8px; }
-#activation-code {
-  min-width: 0; flex: 1; border: 1px solid #dce0ce; border-radius: 9px;
-  background: white; font-size: 12px; padding: 11px;
-}
-.activate-button {
-  background: var(--xmd-brand); color: var(--xmd-ink); border: 0; border-radius: 9px;
-  font-weight: 700; padding: 0 16px; cursor: pointer;
-}
-.purchase-row { display: flex; gap: 8px; margin-top: 16px; }
-#payment-method {
-  background: white; border: 1px solid #dce0ce; border-radius: 9px; font-size: 12px; padding: 9px;
-}
-.purchase-button { flex: 1; border: 0; background: var(--xmd-ink); color: var(--xmd-brand); border-radius: 9px; font-weight: 650; }
 button:disabled { opacity: 0.5; cursor: default; }
-.privacy-note { font-size: 10px; line-height: 1.5; color: #767c6e; margin: 16px 0 0; }
-.checkout-link { display: block; color: var(--xmd-ink); text-decoration-color: #96ac00; font-size: 13px; margin-top: 12px; }
-#payment-qr { display: block; margin: 12px auto 0; border-radius: 8px; }
 
 .primary:hover { background: var(--xmd-brand); box-shadow: inset 0 0 0 1px #171b1633; }
 .primary:disabled { cursor: wait; opacity: 0.55; }
