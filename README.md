@@ -1,7 +1,7 @@
 # XMD · 帖子归档（免费版）
 
 Chrome 扩展，将 X 帖子、长文和评论保存为本地 Markdown。
-当前发布版本 0.4.0：全部导出功能免费，无需激活码、付费或授权服务器。
+当前发布版本 0.4.1：全部导出功能免费，无需激活码、付费或授权服务器。
 无需 X API Key；内容在浏览器本地处理。
 
 ## 功能
@@ -20,10 +20,10 @@ Chrome 扩展，将 X 帖子、长文和评论保存为本地 Markdown。
 
 ## 安装和更新
 
-1. 解压 x-post-markdown-v0.4.0-free.zip。
+1. 解压 x-post-markdown-v0.4.1-free.zip（或 Chrome Web Store 上传包）。
 2. 打开 chrome://extensions，开启开发者模式。
 3. 加载包含 manifest.json 的解压目录；已有安装可覆盖原目录后点击重新加载。
-4. 确认扩展版本为 0.4.0，然后刷新 X 页面。
+4. 确认扩展版本为 0.4.1，然后刷新 X 页面。
 
 批量提交下载期间保持弹窗打开。
 “已开始下载”表示 Chrome 接受任务，最终保存状态以浏览器下载列表为准。
@@ -59,3 +59,13 @@ Logo 源文件为 assets/logo.svg，工具栏 PNG 使用 scripts/build-icons.js
 
 历史付费模块和 backend 保留在源码仓库，供以后评估，免费版不加载也不打包。
 既有服务器服务未因本次客户端免费发布而改动。
+
+## Chrome Web Store
+
+运行 scripts/build-webstore.ps1 生成商店上传 ZIP，仅包含免费运行代码、
+图标资源、manifest 和隐私政策。
+商店说明与权限用途在 store/listing-zh.md，商店素材在 store/assets。
+截图使用扩展实际界面与明确标注的演示内容，不包含真实用户帖文。
+
+隐私政策：[PRIVACY.md](PRIVACY.md)。
+发布者后台需要完成 Google 身份确认并启用两步验证后才允许上传。
