@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "XMD · 帖子归档",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "homepage_url": "https://github.com/LanyXiaosheng/x-post-markdown",
   "description": "免费导出 X 帖子、长文和评论为 Markdown，支持批量选择，无需激活。",
   "permissions": ["activeTab", "contextMenus", "downloads"],

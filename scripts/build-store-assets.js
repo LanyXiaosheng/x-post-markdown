@@ -59,7 +59,7 @@ async function main() {
     const popupBytes = await popup.screenshot();
     await fs.writeFile(path.join(output, "popup-actual.png"), popupBytes);
     const preview = await browser.newPage();
-    const logo = "data:image/svg+xml;base64," + (await fs.readFile(path.join(root, "assets/logo.svg"))).toString("base64");
+    const logo = "data:image/png;base64," + (await fs.readFile(path.join(root, "assets/logo.png"))).toString("base64");
     const popupUrl = "data:image/png;base64," + popupBytes.toString("base64");
     const common = "body{margin:0;font-family:'Segoe UI','Microsoft YaHei',sans-serif;color:#171b16;background:#f7f8f2}" +
       "*{box-sizing:border-box} .pill{background:#ddff03;padding:8px 16px;border-radius:30px;font-size:16px;font-weight:700}" +
@@ -99,12 +99,14 @@ async function main() {
     await preview.screenshot({ path: path.join(output, "screenshot-2-1280x800.png") });
 
     await preview.setViewportSize({ width: 440, height: 280 });
+    const promoArtwork = "data:image/png;base64," + (await fs.readFile(path.join(root, "store/source/promo-artwork.png"))).toString("base64");
     await preview.setContent('<meta charset="utf-8"><style>' + common +
-      "body{background:#171b16;color:#ddff03}.tile{width:440px;height:280px;padding:38px;position:relative;overflow:hidden}" +
-      ".tile:after{content:'';position:absolute;width:240px;height:240px;background:#ddff03;right:-145px;top:25px;border-radius:50%}" +
-      ".brand img{width:62px;height:62px}.brand{font-size:38px}h1{font-size:29px;letter-spacing:-1px;margin:25px 0 11px;color:#f5f8ef}" +
-      "p{font-size:16px;color:#b8c1a8;margin:0}</style><div class=\"tile\"><div class=\"brand\"><img src=\"" + logo +
-      '">XMD</div><h1>帖子 → Markdown</h1><p>批量归档 · 本地处理 · 当前免费</p></div>');
+      "body{background:#171b16;color:#ddff03}.tile{width:440px;height:280px;position:relative;overflow:hidden}" +
+      ".art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}" +
+      ".copy{position:absolute;right:0;top:0;width:174px;height:100%;padding:20px 15px 20px 21px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(90deg,#171b16cc 0%,#171b16 22%)}" +
+      ".brand img{width:32px;height:32px}.brand{font-size:22px;gap:8px}h1{font-size:20px;line-height:1.25;letter-spacing:-.5px;margin:18px 0 10px;color:#f5f8ef}" +
+      "p{font-size:12px;line-height:1.6;color:#b8c1a8;margin:0}</style><div class=\"tile\"><img class=\"art\" src=\"" + promoArtwork +
+      '\"><div class="copy"><div class="brand"><img src="' + logo + '">XMD</div><h1>把 X 帖<br>存为 Markdown</h1><p>批量 · 长文 · 评论<br>本地处理，当前免费</p></div></div>');
     await preview.screenshot({ path: path.join(output, "promo-440x280.png") });
     await fs.copyFile(path.join(root, "assets/icons/icon-128.png"), path.join(output, "icon-128.png"));
     for (const file of ["screenshot-1-1280x800.png", "screenshot-2-1280x800.png", "promo-440x280.png", "icon-128.png"]) {
